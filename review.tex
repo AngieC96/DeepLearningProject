@@ -1,0 +1,107 @@
+\documentclass[10pt, onecolumn]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+
+\usepackage{calc}  % To compute length of line (used in Description)
+\usepackage{enumitem}
+\usepackage{comment}
+\usepackage{authblk} % For affiliation / institute
+
+%%% Math
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+%%% Symbols
+\newcommand{\uv}{\mathbf{u}}    % u vector
+\newcommand{\ev}{\mathbf{e}}    % e vector
+\newcommand{\vv}{\mathbf{v}}    % v vector
+\newcommand{\NN}{\mathrm{NN}}
+
+%%% Algorithms
+\usepackage{algorithm}
+\usepackage{algcompatible}
+\usepackage{algpseudocode}
+\renewcommand{\Comment}[2][.525\linewidth]{%
+  \leavevmode\hfill\makebox[#1][l]{$\triangleright$~#2}} % To align the comments
+
+%%% Graphics
+\usepackage[hyperref]{xcolor} % (option that determine which other packages are to be loaded or supported)
+\usepackage{graphicx} % For logos
+\usepackage{marvosym} % Smile
+
+%%% Index | To be loaded before hyperref
+\usepackage{imakeidx}
+\makeindex[intoc]
+
+%%% Hyperref configuration
+\PassOptionsToPackage{hyphens}{url}\usepackage{hyperref} % to break the links
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,  % color of internal links
+    urlcolor=blue,   % color of external links
+    citecolor=blue,  % color of links to bibliography
+}
+
+%%% Metadata
+\title{\rule{\textwidth}{0.4pt}\\\huge{An algorithmic reasoning\\approach to GNNs}\\\rule{\textwidth}{0.4pt}}
+\author{\Large{Angela Carraro}}
+\author{\Large{Matteo Scorcia}}
+\affil{\Large{DSSC + IN20 - UniTS}}
+\date{}
+
+
+%%% Chapter/sections/etc visual style 
+% Redefine \marginpar with custom style
+\let\defaultmarginpar\marginpar
+\renewcommand\marginpar[2][]{\defaultmarginpar{\itshape\color{gray}#2}}
+% Paragraph style
+%\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+
+
+\begin{document}
+
+\maketitle
+
+\begin{figure}
+    \centering
+    \includegraphics[height=2.5cm]{figures/logo_dssc_alt.pdf}
+    \hspace*{1cm}
+    \includegraphics[height=2.5cm]{figures/Logo_units_blu.pdf}
+\end{figure}
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+
+
+
+
+
+
+
+
+
+
+
+%%% Index
+\printindex
+
+\newpage
+
+%%% Bibliography
+\phantomsection  % If you're also using the hyperref package
+\addcontentsline{toc}{section}{References}
+\bibliographystyle{acm} % acm %siam
+\nocite{*}
+\bibliography{biblio}
+
+
+\end{document}
