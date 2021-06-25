@@ -5,7 +5,7 @@ The project consists in a review of the literature concerning Graph Neural Netwo
 
 
 
-The abstract can be found in this repository [here](ABSTRACT_ An Algorithmic reasoning approach to GNNs.pdf) or online [here](https://docs.google.com/document/d/1eV78L5eH7msQG0gZGF5RZ7Yi4k9WIdL0la8hB9TebYQ/edit?usp=sharing).
+The abstract can be found in this repository [here](abstract.pdf) or online [here](https://docs.google.com/document/d/1eV78L5eH7msQG0gZGF5RZ7Yi4k9WIdL0la8hB9TebYQ/edit?usp=sharing).
 
 The literature review can be found [here](review.pdf).
 
