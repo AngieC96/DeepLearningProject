@@ -83,15 +83,23 @@
 
 \begin{frame}{Aim of the project}
 
-    \alert{Graph Neural Networks}.
+    \alert{Graph Neural Networks} can have a lot of meanings, there isn't just one architecture that can be recognized as “GNN”. We will try to understand the general, abstract structure of a GNN that is presented in the book \cite{BookHamiltonGRL} (which also includes \cite{battaglia2018relational}) and to shed light about the relational inductive bias and combinatorial generalization of a GNN.
+    
+    Our motivation is to better understand the extent to which graph neural networks are capable of \textbf{precise and logical reasoning}.
     
 \end{frame}
 
 \begin{frame}{Graph Theory}
-
-    Graphs are a general language for describing and modelling complex systems.
+    
+    Graphs are a widespread data structure and a universal language for describing and modelling complex systems. In the most general view, a graph is simply a collection of objects (i.e., nodes), along with a set of interactions (i.e., edges) between pairs of these objects. 
 
     Graphs are an important building block since they can naturally encode an entity-relationship structure, as well as an invariance to permutations (of both nodes and edges) and awareness of input sparsity.
+    
+\end{frame}
+
+\begin{frame}{Definition}
+    
+    A \alert{graph} $G = (V, E)$ is defined by a set of nodes $V$ and a set of edges $E$ between these nodes. We denote an edge going from node $u \in V$ to node $v \in V$ as $(u, v) \in E$.
 \end{frame}
 
 \begin{frame}{GNN real-world applications}
@@ -107,7 +115,7 @@
         \item[{$\bullet$}] {\makebox[3.3cm][l]{\alert{\emph{edge prediction}}:} 
         %predict if there exists an edge between two nodes}\\
         infer the edges between nodes in a graph}\\
-        \quad $\longrightarrow$ \; E.g., content recommendation in online platforms, predicting drug side-effects
+        \quad $\longrightarrow$ \; E.g., content recommendation in online platforms, predicting drug side-effects, or inferring new facts in a relational databases
     \end{itemize}
 
 \end{frame}
@@ -122,7 +130,7 @@
 \end{frame}
 }
 
-\begin{frame}[allowframebreaks]{References}
+\begin{frame}[allowframebreaks]{}
 
 	\nocite{*}
 	\printbibliography
