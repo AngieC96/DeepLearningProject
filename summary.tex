@@ -99,9 +99,9 @@ The power of the graph formalism lies both in its focus on \emph{relationships b
 
 Before we discuss machine learning on graphs, it is necessary to give a bit more formal description of what exactly we mean by ``graph data''\index{graph data}. Formally, a \emph{graph}\index{graph}\marginpar{graph} $G = (V, E)$ is defined by a set of nodes $V$ and a set of edges $E$ between these nodes. We denote an edge going from node $u \in V$ to node $v \in V$ as $(u, v) \in E$. In many cases we will be concerned only with \emph{simple graphs}, where there is at most one edge between each pair of nodes, no edges between a node and itself, and where the edges are all undirected, i.e., $(u, v) \in E \Longleftrightarrow (v, u) \in E$.
 
-A convenient way to represent graphs is through an \emph{adjacency matrix}\index{adjacency matrix}\marginpar{adjacency matrix} $A \in \mathbb R^{|V| \times |V|}$. To represent a graph with an adjacency matrix, we order the nodes in the graph so that every node indexes a particular row and column in the adjacency matrix. We can then represent the presence of edges as entries in this matrix: $A[u, v] = 1$ if $(u, v) \in E$ and $A[u, v] = 0$ otherwise. If the graph contains only undirected edges then $A$ will be a symmetric matrix, but if the graph is directed (i.e., edge direction matters) then $A$ will not necessarily be symmetric. Some graphs can also have weighted edges, where the entries in the adjacency matrix are arbitrary real-values rather than $\{0, 1\}$.
+A convenient way to represent graphs is through an \emph{adjacency matrix}\index{adjacency matrix}\marginpar{adjacency matrix} $\mathbf A \in \mathbb R^{|V| \times |V|}$. To represent a graph with an adjacency matrix, we order the nodes in the graph so that every node indexes a particular row and column in the adjacency matrix. We can then represent the presence of edges as entries in this matrix: $\mathbf A[u, v] = 1$ if $(u, v) \in E$ and $\mathbf A[u, v] = 0$ otherwise. If the graph contains only undirected edges then $\mathbf A$ will be a symmetric matrix, but if the graph is directed (i.e., edge direction matters) then $\mathbf A$ will not necessarily be symmetric. Some graphs can also have weighted edges, where the entries in the adjacency matrix are arbitrary real-values rather than $\{0, 1\}$.
 
-Beyond the distinction between undirected, directed and weighted edges, we will also consider graphs that have different types of edges. In these cases we can extend the edge notation to include an edge or relation type $\tau$, e.g., $(u, \tau, v) \in E$, and we can define one adjacency matrix $A_\tau$ per edge type. We call such graphs \emph{multi-relational}\index{multi-relational graph}\marginpar{multi-relational graph}, and the entire graph can be summarized by an adjacency tensor $\mathcal A \in \mathbb R^{|V| \times |\mathcal R| \times |V|}$, where $\mathcal R$ is the set of relations.
+Beyond the distinction between undirected, directed and weighted edges, we will also consider graphs that have different types of edges. In these cases we can extend the edge notation to include an edge or relation type $\tau$, e.g., $(u, \tau, v) \in E$, and we can define one adjacency matrix $\mathbf A_\tau$ per edge type. We call such graphs \emph{multi-relational}\index{multi-relational graph}\marginpar{multi-relational graph}, and the entire graph can be summarized by an adjacency tensor $\mathcal A \in \mathbb R^{|V| \times |\mathcal R| \times |V|}$, where $\mathcal R$ is the set of relations.
 
 Lastly, in many cases we also have \emph{attribute} or \emph{feature} information associated with a graph. Most often these are node-level attributes that we represent using a real-valued matrix $\mathbf X \in \mathbb R^{|V| \times m}$, where we assume that the ordering of the nodes is consistent with the ordering in the adjacency matrix. In some cases we even associate real-valued features with entire graphs.
 
@@ -141,18 +141,22 @@ Of all the machine learning tasks on graphs, graph regression and classification
 
 \section{Background and Traditional Approaches}
 
+Before we introduce the concepts of graph representation learning and deep learning on graphs, it is necessary to give some methodological background and context. What kinds of methods were used for machine learning on graphs prior to the advent of modern deep learning approaches? In this section, we will provide a very brief and focused tour of traditional learning approaches over graphs. This background chapter will also serve to introduce key concepts from \emph{graph analysis}\index{graph analysis} that will form the foundation for later sections.
+
 \subsection{Graph Statistics and Kernel Methods}
 
 \subsubsection{Node-level statistics and features}
 
-In principle the properties and statistics we discuss below could be used as features in a node classification model (e.g., as input to a logistic regression model). We consider some features that could be used to differentiate the nodes in a network, and the properties we discuss are generally useful across a wide variety of node classification tasks.
+What are useful properties and statistics that we can use to characterize the nodes in this graph?
+
+In principle the properties and statistics we discuss below could be used as features in a node classification model (e.g., as input to a logistic regression model). We will consider some features that could be used to differentiate the nodes in a network, and the properties we will discuss are generally useful across a wide variety of node classification tasks.
 \smallskip
 
 \textbf{Node degree}
 
 The most obvious and straightforward node feature to examine is the \emph{degree}\index{degree}\marginpar{degree}, which is usually denoted $d_u$ for a node $u \in V$ and simply counts the number of edges incident to a node:
 \begin{equation}
-    d_u = \sum_{v \in V} A[u, v].
+    d_u = \sum_{v \in V} \mathbf A[u, v].
     \label{eq:degree}
 \end{equation}
 Note that in cases of directed graphs, one can differentiate between different notions of degree --- e.g., corresponding to outgoing edges or incoming edges by summing over rows or columns in \autoref{eq:degree}. In general, the degree of a node is an essential statistic to consider, and it is often one of the most informative features in traditional machine learning models applied to node-level tasks.
@@ -164,18 +168,18 @@ Node degree simply measures how many neighbors a node has, but this is not neces
 
 One popular and important measure of centrality is the so-called \emph{eigenvector centrality}\index{eigenvector centrality}\marginpar{eigenvector centrality}. Whereas degree simply measures how many neighbors each node has, eigenvector centrality also takes into account how important a node's neighbors are. In particular, we define a node's eigenvector centrality $e_u$ via a recurrence relation in which the node's centrality is proportional to the average centrality of its neighbors:
 \begin{equation}
-    e_u = \frac1\lambda \sum_{v \in V} A[u, v] e_v \qquad \forall u \in V,
+    e_u = \frac1\lambda \sum_{v \in V} \mathbf A[u, v] e_v \qquad \forall u \in V,
     \label{eq:eigencentr}
 \end{equation}
 where $\lambda$ is a constant. Rewriting this equation in vector notation with $\mathbf e$ as the vector of node centralities, we can see that this recurrence defines the standard eigenvector equation for the adjacency matrix:
 \begin{equation}
-    \lambda \mathbf e = A \mathbf e.
+    \lambda \mathbf e = \mathbf A \mathbf e.
 \end{equation}
-In other words, the centrality measure that satisfies the recurrence in \autoref{eq:eigencentr} corresponds to an eigenvector of the adjacency matrix. Assuming that we require positive centrality values, we can apply the Perron-Frobenius Theorem --- for our purposes the key assertion in the theorem is that any irreducible square matrix has a unique largest real eigenvalue, which is the only eigenvalue whose corresponding eigenvector can be chosen to have strictly positive components---  to further determine that the vector of centrality values $\mathbf e$ is given by the eigenvector corresponding to the largest eigenvalue of $A$.
+In other words, the centrality measure that satisfies the recurrence in \autoref{eq:eigencentr} corresponds to an eigenvector of the adjacency matrix. Assuming that we require positive centrality values, we can apply the Perron-Frobenius Theorem --- for our purposes the key assertion in the theorem is that any irreducible square matrix has a unique largest real eigenvalue, which is the only eigenvalue whose corresponding eigenvector can be chosen to have strictly positive components---  to further determine that the vector of centrality values $\mathbf e$ is given by the eigenvector corresponding to the largest eigenvalue of $\mathbf A$.
 
-One view of eigenvector centrality is that it ranks the likelihood that a node is visited on a random walk of infinite length on the graph. This view can be illustrated by considering the use of power iteration to obtain the eigenvector centrality values. That is, since $\lambda$ is the leading eigenvector of $A$, we can compute $\mathbf e$ using power iteration via
+One view of eigenvector centrality is that it ranks the likelihood that a node is visited on a random walk of infinite length on the graph. This view can be illustrated by considering the use of power iteration to obtain the eigenvector centrality values. That is, since $\lambda$ is the leading eigenvector of $\mathbf A$, we can compute $\mathbf e$ using power iteration via
 \begin{equation}
-    \mathbf e^{(t+1)} = A \mathbf e^{(t)}.
+    \mathbf e^{(t+1)} = \mathbf A \mathbf e^{(t)}.
 \end{equation}
 Note that we have ignored the normalization in the power iteration computation for simplicity, as this does not change the main result. If we start off this power iteration with the vector $\mathbf e^{(0)} = (1, 1, \ldots, 1)^T$, then we can see that after the first iteration $\mathbf e^{(1)}$ will contain the degrees of all the nodes. In general, at iteration $t \ge 1$, $\mathbf e^{(t)}$ will contain the number of length-$t$ paths arriving at each node. Thus, by iterating this process indefinitely we obtain a score that is proportional to the number of times a node is visited on paths of infinite length. This connection between node importance, random walks, and the spectrum of the graph adjacency matrix will return often throughout the ensuing sections and chapters of this book.
 \smallskip
@@ -217,7 +221,7 @@ where we use $\mathbf S[u, v]$ to denote the value quantifying the relationship 
 
 Even though there is no ``machine learning'' involved in any of the statistical measures discussed in this section, they are still very useful and powerful baselines for relation prediction. Given a neighborhood overlap statistic $\mathbf S[u, v]$, a common strategy is to assume that the likelihood of an edge $(u, v)$ is simply proportional to $\mathbf S[u, v]$:
 \begin{equation}
-    \mathbf P (A[u, v] = 1) \propto \mathbf S[u, v].
+    \mathbf P (\mathbf A[u, v] = 1) \propto \mathbf S[u, v].
 \end{equation}
 Thus, in order to approach the relation prediction task using a neighborhood overlap measure, one simply needs to set a threshold to determine when to predict the existence of an edge. Note that in the relation prediction setting we generally assume that we only know a subset of the true edges $E_\text{train} \subset E$. Our hope is that \emph{node-node similarity measures}\index{node-node similarity measures}\marginpar{node-node similarity measures} computed on the training edges will lead to accurate predictions about the existence of test (i.e., unseen) edges.
 
@@ -265,9 +269,9 @@ where $\mathbf Z \in \mathbb R^{|V| \times d}$ is a matrix containing the embedd
 
 \subsubsection{The Decoder}
 
-The role of the \emph{decoder}\index{decoder}\marginpar{decoder} is to reconstruct certain graph statistics from the node embeddings that are generated by the encoder. For example, given a node embedding $\mathbf z_u$ of a node $u$, the decoder might attempt to predict $u$'s set of neighbors $\mathcal N(u)$ or its row $A[u]$ in the graph adjacency matrix.
+The role of the \emph{decoder}\index{decoder}\marginpar{decoder} is to reconstruct certain graph statistics from the node embeddings that are generated by the encoder. For example, given a node embedding $\mathbf z_u$ of a node $u$, the decoder might attempt to predict $u$'s set of neighbors $\mathcal N(u)$ or its row $\mathbf A[u]$ in the graph adjacency matrix.
 
-While many decoders are possible, the standard practice is to define pairwise decoders, which have the following signature:
+While many decoders are possible, the standard practice is to define \emph{pairwise decoders}\index{pairwise decoders}\marginpar{pairwise decoders}, which have the following signature:
 \begin{equation}
     \textsc{dec}: \mathbb R^d \times \mathbb R^d \rightarrow \mathbb R^+.
 \end{equation}
@@ -278,7 +282,7 @@ Applying the pairwise decoder to a pair of embeddings $(\mathbf z_u, \mathbf z_v
     \textsc{dec}(\textsc{enc}(u), \textsc{enc}(v)) = \textsc{dec}(\mathbf z_u, \mathbf z_v) \approx \mathbf S[u, v].
     \label{eq:reconstrloss}
 \end{equation}
-Here, we assume that $\mathbf S[u, v]$ is a graph-based similarity measure between nodes. For example, the simple reconstruction objective of predicting whether two nodes are neighbors would correspond to $\mathbf S[u, v] := A[u, v]$. However, one can define $\mathbf S[u, v]$ in more general ways as well, for example, by leveraging any of the pairwise neighborhood overlap statistics discussed in \autoref{sec:neighovdet}.
+Here, we assume that $\mathbf S[u, v]$ is a graph-based similarity measure between nodes. For example, the simple reconstruction objective of predicting whether two nodes are neighbors would correspond to $\mathbf S[u, v] := \mathbf A[u, v]$. However, one can define $\mathbf S[u, v]$ in more general ways as well, for example, by leveraging any of the pairwise neighborhood overlap statistics discussed in \autoref{sec:neighovdet}.
 
 
 \subsubsection{Optimizing an Encoder-Decoder Model}
@@ -302,9 +306,9 @@ where $\ell: \mathbb R \times \mathbb R \rightarrow \mathbb R$ is a loss functio
         \midrule
         Lap. Eigenmaps & $\|\mathbf{z}_u - \mathbf{z}_v\|_2^2$ & general & $\textsc{dec}(\mathbf{z}_u, \mathbf{z}_v)\cdot \mathbf S[u,v]$ \\
         
-        Graph Fact. & $\mathbf{z}_u^T \mathbf{z}_v$ & $A[u,v]$ & $\|\textsc{dec}(\mathbf{z}_u, \mathbf{z}_v) \cdot \mathbf S[u,v]\|^2_2$ \\
+        Graph Fact. & $\mathbf{z}_u^T \mathbf{z}_v$ & $\mathbf A[u,v]$ & $\|\textsc{dec}(\mathbf{z}_u, \mathbf{z}_v) \cdot \mathbf S[u,v]\|^2_2$ \\
         
-        GraRep & $\mathbf{z}_u^T \mathbf{z}_v$ & $A[u,v],\ldots,A^k[u,v]$ & $\|\textsc{dec}(\mathbf{z}_u, \mathbf{z}_v) \cdot \mathbf S[u,v]\|^2_2$ \\
+        GraRep & $\mathbf{z}_u^T \mathbf{z}_v$ & $\mathbf A[u,v],\ldots,\mathbf A^k[u,v]$ & $\|\textsc{dec}(\mathbf{z}_u, \mathbf{z}_v) \cdot \mathbf S[u,v]\|^2_2$ \\
         
         HOPE & $\mathbf{z}_u^T \mathbf{z}_v$ & general & $\|\textsc{dec}(\mathbf{z}_u, \mathbf{z}_v) \cdot \mathbf S[u,v]\|^2_2$ \\
         
@@ -338,14 +342,14 @@ The primary challenge in developing complex encoders for graph-structured data i
 
 \textbf{Permutation invariance and equivariance} One reasonable idea for defining a deep neural network over graphs would be to simply use the adjacency matrix as input to a deep neural network. For example, to generate an embedding of an entire graph we could simply flatten the adjacency matrix and feed the result to a multi-layer perceptron (MLP):
 \begin{equation}
-    \mathbf z_G = \text{MLP}(\mathbf A[1] \oplus \mathbf A[2] \oplus \ldots \oplus \mathbf A[|\mathcal V|]);
+    \mathbf z_G = \text{MLP}(\mathbf \mathbf A[1] \oplus \mathbf \mathbf A[2] \oplus \ldots \oplus \mathbf \mathbf A[|\mathcal V|]);
 \end{equation}
-where $\mathbf A[i] \in \mathbf R^{|\mathcal V|}$ denotes a row of the adjacency matrix and we use $\oplus$ to denote vector concatenation.
+where $\mathbf \mathbf A[i] \in \mathbf R^{|\mathcal V|}$ denotes a row of the adjacency matrix and we use $\oplus$ to denote vector concatenation.
 
-The issue with this approach is that it \textit{depends on the arbitrary ordering of nodes that we used in the adjacency matrix}. In other words, such a model is not \textit{permutation invariant}, and a key desideratum for designing neural networks over graphs is that they should permutation invariant (or equivariant). In mathematical terms, any function $f$ that takes an adjacency matrix $\mathbf A$ as input should ideally satisfy one of the two following properties:
+The issue with this approach is that it \textit{depends on the arbitrary ordering of nodes that we used in the adjacency matrix}. In other words, such a model is not \textit{permutation invariant}, and a key desideratum for designing neural networks over graphs is that they should permutation invariant (or equivariant). In mathematical terms, any function $f$ that takes an adjacency matrix $\mathbf \mathbf A$ as input should ideally satisfy one of the two following properties:
 \begin{align}
-    f(\mathbf{PAP}^T) = f(\mathbf A) \qquad &\text{(Permutation Invariance)} \\
-    f(\mathbf{PAP}^T) = \mathbf P f(\mathbf A) \qquad &\text{(Permutation Equivariance)},
+    f(\mathbf{P\mathbf AP}^T) = f(\mathbf \mathbf A) \qquad &\text{(Permutation Invariance)} \\
+    f(\mathbf{P\mathbf AP}^T) = \mathbf P f(\mathbf \mathbf A) \qquad &\text{(Permutation Equivariance)},
 \end{align}
 where $\mathbf P$ is a permutation matrix. \emph{Permutation invariance}\index{permutation invariance}\marginpar{permutation invariance} means that the function does not depend on the arbitrary ordering of the rows/columns in the adjacency matrix, while \emph{permutation equivariance}\index{permutation equivariance}\marginpar{permutation equivariance} means that the output of $f$ is permuted in an consistent way when we permute the adjacency matrix. (The shallow encoders are an example of permutation equivariant functions.) Ensuring invariance or equivariance is a key challenge when we are learning over graphs, and we will revisit issues surrounding permutation equivariance and invariance often in the ensuing chapters.
 
@@ -368,7 +372,7 @@ where $\textsc{update}$ and $\textsc{aggregate}$ are arbitrary differentiable fu
 \end{equation}
 is the ``message'' that is aggregated from $u$'s graph neighborhood $\mathcal N(u)$. We use superscripts to distinguish the embeddings and functions at different iterations of message passing. The different iterations of message passing are also sometimes known as the different ``layers'' of the GNN.
 
-At each iteration $k$ of the GNN, the $\textsc{aggregate}$ function takes as input the set of embeddings of the nodes in $u$'s graph neighborhood $\mathcal N(u)$ and generates a message $\mathbf m^{(k)}_{\mathcal N(u)} = \textsc{aggregate}^{(k)}(\{\mathbf h^{(k)}_v, \forall v \in \mathcal N(u)\})$ based on this aggregated neighborhood information (\emph{neighborhood aggregation operation}\index{neighborhood aggregation operation}\marginpar{neighborhood aggregation operation}). The update function $\textsc{update}$ then combines the message $\mathbf m^{(k)}_{\mathcal N(u)}$ with the previous embedding $\mathbf h^{(k−1)}_u$ of node $u$ to generate the updated embedding $\mathbf h^{(k)}_u$. The initial embeddings at k = 0 are set to the input features for all the nodes, i.e., $\mathbf h^{(0)}_u = \mathbf x_u, \forall u \in \mathcal V$. After running $K$ iterations of the GNN message passing, we can use the output of the final layer to define the embeddings for each node, i.e.,
+At each iteration $k$ of the GNN, the $\textsc{aggregate}$ function takes as input the set of embeddings of the nodes in $u$'s graph neighborhood $\mathcal N(u)$ and generates a message $\mathbf m^{(k)}_{\mathcal N(u)} = \textsc{aggregate}^{(k)}(\{\mathbf h^{(k)}_v, \forall v \in \mathcal N(u)\})$ based on this aggregated neighborhood information (\emph{neighborhood aggregation operation}\index{neighborhood aggregation operation}\marginpar{neighborhood aggregation operation}). The update function $\textsc{update}$ then combines the message $\mathbf m^{(k)}_{\mathcal N(u)}$ with the previous embedding $\mathbf h^{(k−1)}_u$ of node $u$ to generate the updated embedding $\mathbf h^{(k)}_u$. The initial embeddings at $k = 0$ are set to the input features for all the nodes, i.e., $\mathbf h^{(0)}_u = \mathbf x_u, \forall u \in \mathcal V$. After running $K$ iterations of the GNN message passing, we can use the output of the final layer to define the embeddings for each node, i.e.,
 \begin{equation}
     \mathbf z_u = \mathbf h^{(K)}_u, \forall u \in \mathcal V.
 \end{equation}
@@ -408,9 +412,9 @@ as a shorthand to denote the message that has been aggregated from $u$'s graph n
 
 \textbf{Node vs. graph-level equations.} In the description of the basic GNN model above, we defined the core message-passing operations at the node level. However, it is important to note that many GNNs can also be succinctly defined using graph-level equations. In the case of a basic GNN, we can write the graph-level definition of the model as follows:
 \begin{equation}
-    \mathbf H^{(k)} = \sigma \left( A \mathbf H^{(k-1)} \mathbf W_\text{neigh}^{(k)} + \mathbf H^{(k-1)} \mathbf W_\text{self}^{(k)} \right),
+    \mathbf H^{(k)} = \sigma \left( \mathbf A \mathbf H^{(k-1)} \mathbf W_\text{neigh}^{(k)} + \mathbf H^{(k-1)} \mathbf W_\text{self}^{(k)} \right),
 \end{equation}
-where $\mathbf H^{(k)} \in \mathbb R^{|V| \times d}$ denotes the matrix of node representations at layer $k$ in the GNN (with each node corresponding to a row in the matrix), $A$ is the graph adjacency matrix, and we have omitted the bias term for notational simplicity. While this graph-level representation is not easily applicable to all GNN models --- such as the attention-based models --- it is often more succinct and also highlights how many GNNs can be efficiently implemented using a small number of sparse matrix operations.
+where $\mathbf H^{(k)} \in \mathbb R^{|V| \times d}$ denotes the matrix of node representations at layer $k$ in the GNN (with each node corresponding to a row in the matrix), $\mathbf A$ is the graph adjacency matrix, and we have omitted the bias term for notational simplicity. While this graph-level representation is not easily applicable to all GNN models --- such as the attention-based models --- it is often more succinct and also highlights how many GNNs can be efficiently implemented using a small number of sparse matrix operations.
 
 \subsubsection{Message Passing with Self-loops}
 
@@ -418,18 +422,18 @@ As a simplification of the neural message passing approach, it is common to add 
 \begin{equation}
     \mathbf h^{(k)}_u = \textsc{aggregate}(\{\mathbf h_v^{(k-1)}, \; \forall v \in \mathcal N(u) \cup \{u\}\}),
 \end{equation}
-where now the aggregation is taken over the set $\mathcal N(u) \cup \{u\}$, i.e., the node’s neighbors as well as the node itself. The benefit of this approach is that we no longer need to define an explicit update function, as the update is implicitly defined through the aggregation method.
+where now the aggregation is taken over the set $\mathcal N(u) \cup \{u\}$, i.e., the node's neighbors as well as the node itself. The benefit of this approach is that we no longer need to define an explicit update function, as the update is implicitly defined through the aggregation method.
 
 In the case of the basic GNN, adding self-loops is equivalent to  sharing parameters between the $\mathbf W_\text{self}$ and $\mathbf W_\text{neigh}$ matrices, which gives the following graph-level update:
 \begin{equation}
-    \mathbf H^{(k)} = \sigma \left( (A + I) \mathbf H^{(k-1)} \mathbf W^{(k)} \right) .
+    \mathbf H^{(k)} = \sigma \left( (\mathbf A + I) \mathbf H^{(k-1)} \mathbf W^{(k)} \right) .
 \end{equation}
 In the following chapters we will refer to this as the \emph{self-loop approach}\index{self-loop approach}\marginpar{self-loop approach}.
 
-%\subsection{Generalized Neighborhood Aggregation}
+%\subsection{Generalized Neighborhood \mathbf Aggregation}
 \subsection{Graph convolutional networks (GCNs)}
 
-%GCNN fatte con Generalized Neighborhood Aggregation. Poi si può fare anche Generalized Update Methods, che aiuta per l'oversmoothing.
+%GCNN fatte con Generalized Neighborhood \mathbf Aggregation. Poi si può fare anche Generalized Update Methods, che aiuta per l'oversmoothing.
 
 The basic GNN can be improved upon and generalized in many ways: both the \textsc{aggregate} operator and the \textsc{update} can be generalized and improved upon.
 
@@ -451,9 +455,9 @@ One of the most popular baseline graph neural network models --- the \emph{graph
 
 \subsubsection{Set Aggregators}
 
-Neighborhood normalization can be a useful tool to improve GNN performance, but can we do more to improve the AGGREGATE operator? Is there perhaps something more sophisticated than just summing over the neighbor embeddings?
+Neighborhood normalization can be a useful tool to improve GNN performance, but can we do more to improve the $\textsc{aggregate}$ operator? Is there perhaps something more sophisticated than just summing over the neighbor embeddings?
 
-The \emph{neighborhood aggregation operation}\index{neighborhood aggregation operation} is fundamentally a set function. We are given a set of neighbor embeddings $\{\mathbf h_v, \forall v \in \mathcal N(u)\}$ and must map this set to a single vector $\mathbf m_{\mathcal N(u)}$. The fact that $\{\mathbf h_v, \forall v \in \mathcal N(u)\}$ is a set is in fact quite important: there is no natural ordering of a nodes’ neighbors, and any aggregation function we define must thus be permutation invariant.
+The \emph{neighborhood aggregation operation}\index{neighborhood aggregation operation} is fundamentally a set function. We are given a set of neighbor embeddings $\{\mathbf h_v, \forall v \in \mathcal N(u)\}$ and must map this set to a single vector $\mathbf m_{\mathcal N(u)}$. The fact that $\{\mathbf h_v, \forall v \in \mathcal N(u)\}$ is a set is in fact quite important: there is no natural ordering of a nodes' neighbors, and any aggregation function we define must thus be permutation invariant.
 
 One principled approach to define an aggregation function is based on the theory of permutation invariant neural networks. An aggregation function with the following form is a \emph{universal set function approximator}\index{universal set function approximator}\marginpar{universal set function approximator}:
 \begin{equation}
@@ -466,7 +470,7 @@ where as usual we use $\textbf{MLP}_\theta$ to denote an arbitrarily deep multi-
 
 \subsubsection{Neighborhood Attention}
 
-In addition to more general forms of set aggregation, a popular strategy for improving the aggregation layer in GNNs is to apply attention. The basic idea is to assign an attention weight or importance to each neighbor, which is used to weigh this neighbor’s influence during the aggregation step. The first GNN model to apply this style of attention was the \emph{Graph Attention Network (GAT)}\index{Graph Attention Network (GAT)}\marginpar{Graph Attention Network (GAT)}, which uses attention weights to define a weighted sum of the neighbors:
+In addition to more general forms of set aggregation, a popular strategy for improving the aggregation layer in GNNs is to apply attention. The basic idea is to assign an attention weight or importance to each neighbor, which is used to weigh this neighbor's influence during the aggregation step. The first GNN model to apply this style of attention was the \emph{Graph Attention Network (GAT)}\index{Graph Attention Network (GAT)}\marginpar{Graph Attention Network (GAT)}, which uses attention weights to define a weighted sum of the neighbors:
 \begin{equation}
     \mathbf m_{\mathcal N(u)} = \sum_{v \in \mathcal N(u)} \alpha_{u,v} \mathbf h_v,
 \end{equation}
@@ -476,7 +480,7 @@ where $\alpha_{u,v}$ denotes the attention on neighbor $v \in \mathcal N(u)$ whe
 \end{equation}
 where $\mathbf a$ is a trainable attention vector, $\mathbf W$ is a trainable matrix, and $\oplus$ denotes the concatenation operation. Adding attention is a useful strategy for increasing the representational capacity of a GNN model, especially in cases where you have prior knowledge to indicate that some neighbors might be more informative than others. 
 
-In many ways the \textsc{update} operator plays an equally important role as the \textsc{aggregate} operator in defining the power and inductive bias of the GNN model. So far, we have seen the basic GNN approach --- where the update operation involves a linear combination of the node’s current embedding with the message from its neighbors --- as well as the self-loop approach, which simply involves adding a self-loop to the graph before performing neighborhood aggregation. In this section, we turn our attention to more diverse generalizations of the \textsc{update} operator.
+In many ways the \textsc{update} operator plays an equally important role as the \textsc{aggregate} operator in defining the power and inductive bias of the GNN model. So far, we have seen the basic GNN approach --- where the update operation involves a linear combination of the node's current embedding with the message from its neighbors --- as well as the self-loop approach, which simply involves adding a self-loop to the graph before performing neighborhood aggregation. In this section, we turn our attention to more diverse generalizations of the \textsc{update} operator.
 
 One common issue with GNNs --- which generalized update methods can help to address --- is known as \emph{over-smoothing}\index{over-smoothing}\marginpar{over-smoothing}. The essential idea of over-smoothing is that after several iterations of GNN message passing, the representations for all the nodes in the graph can become very similar to one another. This tendency is especially common in basic GNN models and models that employ the selfloop update approach. Over-smoothing is problematic because it makes it impossible to build deeper GNN models --- which leverage longer-term dependencies in the graph --- since these deep GNN models tend to just generate over-smoothed embeddings.
 
@@ -484,18 +488,18 @@ A theorem states that when we are using a K-layer GCN-style model, the influence
 
 \subsubsection{Concatenation and Skip-Connections}
 
-As discussed above, over-smoothing is a core issue in GNNs. Over-smoothing occurs when node-specific information becomes ``washed out'' or ``lost'' after several iterations of GNN message passing. Intuitively, we can expect oversmoothing in cases where the information being aggregated from the node neighbors during message passing begins to dominate the updated node representations.  A natural way to alleviate this issue is to use vector concatenations or skip connections, which try to directly preserve information from previous rounds of message passing during the update step.
+As discussed above, over-smoothing is a core issue in GNNs. Over-smoothing occurs when node-specific information becomes ``washed out'' or ``lost'' after several iterations of GNN message passing. Intuitively, we can expect oversmoothing in cases where the information being aggregated from the node neighbors during message passing begins to dominate the updated node representations. A natural way to alleviate this issue is to use vector concatenations or skip connections, which try to directly preserve information from previous rounds of message passing during the update step.
 
 One of the simplest skip connection updates employs a concatenation to
 preserve more node-level information during message passing:
 \begin{equation}
 \textsc{update}_\text{concat}(\mathbf h_u, \mathbf m_{\mathcal N(u)}) = [\textsc{update}_\text{base}(\mathbf h_u, \mathbf m_{\mathcal N(u)}) \oplus \mathbf h_u],
 \end{equation}
-where we simply concatenate the output of the base update function with the node’s previous-layer representation. Again, the key intuition here is that we encourage the model to disentangle information during message passing --- separating the information coming from the neighbors (i.e., $\mathbf m_{\mathcal N(u)}$) from the current representation of each node (i.e., $\mathbf h_u$).
+where we simply concatenate the output of the base update function with the node's previous-layer representation. Again, the key intuition here is that we encourage the model to disentangle information during message passing --- separating the information coming from the neighbors (i.e., $\mathbf m_{\mathcal N(u)}$) from the current representation of each node (i.e., $\mathbf h_u$).
 
 However, in addition to concatenation, we can also employ other forms of skip-connections, such as the \emph{linear interpolation method}\index{linear interpolation method}\marginpar{linear interpolation method}
 \begin{equation}
-    UPDATEinterpolate(hu; mN(u)) = α1 ◦ UPDATEbase(hu; mN(u)) + α2 hu;
+    UPD\mathbf ATEinterpolate(hu; mN(u)) = α1 ◦ UPD\mathbf ATEbase(hu; mN(u)) + α2 hu;
 \end{equation}
 where α1; α2 2 [0; 1]d are gating vectors with α2 = 1 − α1 and ◦ denotes elementwise multiplication. In this approach, the final updated representation is a linear interpolation between the previous representation and the representation that was updated based on the neighborhood information. The gating parameters α1 can be learned jointly with the model in a variety of ways.
 
@@ -511,7 +515,7 @@ One way to view the GNN message passing algorithm is that the aggregation functi
 where GRU denotes the update equation of the gated recurrent unit (GRU) cell. Other approaches have employed updates based on the
 LSTM architecture.
 
-In general, any update function defined for RNNs can be employed in the context of GNNs. We simply replace the hidden state argument of the RNN update function (usually denoted $\mathbf h^{(t)}$) with the node’s hidden state, and we replace the observation vector (usually denoted $\mathbf x^{(t)}$) with the message aggregated from the local neighborhood. Importantly, the parameters of this RNN-style update are always shared across nodes (i.e., we use the same LSTM or GRU cell to update each node). In practice, researchers usually share the parameters of the update function across the message-passing layers of the GNN as well.
+In general, any update function defined for RNNs can be employed in the context of GNNs. We simply replace the hidden state argument of the RNN update function (usually denoted $\mathbf h^{(t)}$) with the node's hidden state, and we replace the observation vector (usually denoted $\mathbf x^{(t)}$) with the message aggregated from the local neighborhood. Importantly, the parameters of this RNN-style update are always shared across nodes (i.e., we use the same LSTM or GRU cell to update each node). In practice, researchers usually share the parameters of the update function across the message-passing layers of the GNN as well.
 
 These gated updates are very effective at facilitating deep GNN architectures (e.g., more than 10 layers) and preventing over-smoothing. Generally, they are most useful for GNN applications where the prediction task requires complex reasoning over the global structure of the graph, such as applications for program analysis or combinatorial optimization [Selsam et al., 2019].
 
@@ -542,7 +546,7 @@ The presentation in this chapter so far has focused on the most popular style of
     \mathbf h^{(k)}_G &= \textsc{update}_\text{graph}(\mathbf h_G^{( k-1)}, \{ \mathbf h_u^{(k)}, \, \forall u \in V\}, \{ \mathbf h_{(u,v)}^{(k)}, \forall (u, v) \in E\}).
     \label{eq:upgraph}
 \end{align}
-The important innovation in this generalized message passing framework is that, during message passing, we generate hidden embeddings $\mathbf h_{(u,v)}^{(k)}$ for each edge in the graph, as well as an embedding $h_G^{(k)}$ corresponding to the entire graph. This allows the message passing model to easily integrate edge and graph-level features, and recent work has also shown this generalized message passing approach to have benefits compared to a standard GNN in terms of logical expressiveness. Generating embeddings for edges and the entire graph during message passing also makes it trivial to define loss functions based on graph or edge-level classification tasks.
+The important innovation in this generalized message passing framework is that, during message passing, we generate hidden embeddings $\mathbf h_{(u,v)}^{(k)}$ for each edge in the graph, as well as an embedding $\mathbf h_G^{(k)}$ corresponding to the entire graph. This allows the message passing model to easily integrate edge and graph-level features, and recent work has also shown this generalized message passing approach to have benefits compared to a standard GNN in terms of logical expressiveness. Generating embeddings for edges and the entire graph during message passing also makes it trivial to define loss functions based on graph or edge-level classification tasks.
 
 In terms of the message-passing operations in this generalized message-passing framework, we first update the edge embeddings based on the embeddings of their incident nodes (\autoref{eq:upedge}). Next, we update the node embeddings by aggregating the edge embeddings for all their incident edges (\autoref{eq:message} and \ref{eq:upnode}). The graph embedding is used in the update equation for both node and edge representations, and the graph-level embedding itself is updated by aggregating over all the node and edge embeddings at the end of each iteration (\autoref{eq:upgraph}). All of the individual update and aggregation operations in such a generalized message-passing framework can be implemented using the
 techniques discussed earlier (e.g., using a pooling method to compute the graph-level update).
@@ -561,11 +565,11 @@ In the vast majority of current applications, GNNs are used for one of three tas
 The standard way to apply GNNs to such a \emph{node classification}\index{node classification}\marginpar{node classification} task is to train GNNs in a fully-supervised manner, where we define the loss using a softmax classification function and negative log-likelihood loss:
 \begin{equation}
     \mathcal L = \sum_{u \in V_\text{train}} -\log(\text{softmax}(\mathbf z_u, \mathbf y_u)),
+    \label{eq:lossnodeclass}
 \end{equation}
 Here, we assume that $\mathbf y_u \in \mathbb Z^c$ is a one-hot vector indicating the class of training node $u \in V_\text{train}$ and we use $\text{softmax}(\mathbf z_u, \mathbf y_u)$ to denote the predicted probability that the node belongs to the class $\mathbf y_u$, computed via the $\text{softmax}$ function:
 \begin{equation}
     \text{softmax}(\mathbf z_u, \mathbf y_u) = \sum^c_{i=1} \mathbf y_u[i] \frac{e^{\mathbf z_u^\top \mathbf w_i}}{\sum^c_{j=1} e^{\mathbf z_u^\top \mathbf w_j}},
-    \label{eq:lossnodeclass}
 \end{equation}
 where $\mathbf w_i \in \mathbb R^d, i = 1, \ldots, c$ are trainable parameters.
 
@@ -757,8 +761,7 @@ The $\rho$ functions each take a set as input, and reduce it to a single element
 \label{alg:gn}
 \end{algorithm}
 
-When a graph, $G$, is provided as input to a GN block, the computations proceed from the edge, to the node, to the global level.
-Algorithm~\ref{alg:gn} shows the following steps of computation:
+When a graph, $G$, is provided as input to a GN block, the computations proceed from the edge, to the node, to the global level. Algorithm~\ref{alg:gn} shows the following steps of computation:
 \begin{enumerate}[noitemsep]
     \item $\phi^e$ is applied per edge, with arguments $(\ev_k, \vv_{r_k}, \vv_{s_k}, \uv)$, and returns $\ev'_k$. The set of resulting per-edge outputs for each node, $i$, is, $E'_i = \left\{\left(\mathbf{e}'_k, r_k, s_k \right)\right\}_{r_k=i,\; k=1:N^e}$. And $E' = \bigcup_i E_i' = \left\{\left(\mathbf{e}'_k, r_k, s_k \right)\right\}_{k=1:N^e}$ is the set of all per-edge outputs.
     
@@ -786,6 +789,69 @@ Third, a GN's per-edge and per-node functions are reused across all edges and no
 
 
 
+\chapter{Combinatorial Optimization and Reasoning with Graph Neural Networks}
+
+Summary of \cite{cappart2021combinatorial}.
+
+The inductive bias of GNNs effectively encodes combinatorial and relational input due to their invariance to permutations and awareness of input sparsity.
+
+\section{What are the Challenges for Machine Learning?}
+
+Intuitively, CO deals with problems that involve optimizing a cost (or objective) function by selecting a subset from a finite set, with the latter encoding constraints on the solution space.
+
+\subsection{What are the Challenges for Machine Learning?}
+
+There are several critical challenges in successfully applying machine learning methods within CO, especially for problems involving graphs. Graphs have no unique representation, i.e., renaming or reordering the nodes does not result in different graphs. Hence, for any machine learning method dealing with graphs, taking into account invariance to permutation is crucial. Combinatorial optimization problem instances, especially those arising from the real world, are large and usually sparse. Hence, the employed machine learning method must be scalable and sparsity-aware. Simultaneously, the employed method has to be expressive enough to detect and exploit the relevant patterns in the given instance or data distribution. The machine learning method should be capable of handling auxiliary information, such as objective and user-defined constraints. Most of the current machine learning approaches are within the supervised regime. That is, they require a large amount of training data to optimize the parameters of the model. In the context of CO, this means solving many possibly hard problem instances, which might prohibit the application of these approaches in real-world scenarios. Further, the machine learning method has to be able to generalize beyond its training data, e.g., transferring to instances of different sizes.
+
+Overall, there is a trade-off between scalability, expressivity, and generalization, any pair of which might conflict. In summary, the key challenges are:
+\begin{enumerate}
+    \item Machine learning methods that operate on graph data have to be \emph{invariant} to node \emph{permutations}. They should also exploit the graph \emph{sparsity}.
+    \item Models should \emph{distinguish} critical structural \emph{patterns} in the provided data while still \emph{scaling} to large real-world instances.
+    \item \emph{Side information} in the form of high-dimensional vectors attached to nodes and edges, i.e., modeling objectives and additional information, needs to be considered.
+    \item Models should be \emph{data-efficient}. That is, they should ideally work without requiring large amounts of labeled data, and they should be transferable to \emph{out-of-sample} instances.
+\end{enumerate}
+
+\subsection{How Do GNNs Address These Challenges?}
+
+GNNs have recently emerged as machine learning architectures that (partially) address the challenges above.
+
+The key idea underlying GNNs is to compute a vectorial representation, e.g., a real vector, of each node in the input graph by iteratively aggregating features of neighboring nodes. By parameterizing this aggregation step, the GNN is trained in an end-to-end fashion against a loss function, using (stochastic) first-order optimization techniques to adapt to the given data distribution. The promise here is that the learned vector representation encodes crucial graph structures that help solve a CO problem more efficiently. GNNs are invariant and equivariant by design, i.e., they automatically exploit the invariances or symmetries inherent to the given instance or data distribution. Due to their local nature, by aggregating neighborhood information, GNNs naturally exploit sparsity, leading to more scalable models on sparse inputs. Moreover, although scalability is still an issue, they scale linearly with the number of edges and employed parameters, while taking multi-dimensional node and edge features into account, naturally exploiting cost and objective function information. However, the data-efficiency question is still largely open.
+
+\section{GNNs for Combinatorial Optimization: The State of the Art}
+    
+Beyond using standard GNN models for CO, the emerging paradigm of algorithmic reasoning provides new perspectives on designing and training GNNs that satisfy natural invariants and properties, enabling improved generalization and interpretability.
+
+\subsection{On the Primal Side: Finding Feasible Solutions}
+
+We begin by discussing the use of GNNs in improving the solution-finding process in CO. It is natural to wonder whether the primal side of CO is worth exploring when, given sufficient time, exact (or complete) algorithms guarantee finding an optimal solution. The following practical scenarios motivate the need for quickly obtaining high-quality feasible solutions.
+\begin{enumerate}[label=\textbf{\alph*)}]
+    \item \textbf{Optimality guarantees are often not needed} A practitioner may only be interested in the quality of a feasible solution in absolute terms rather than relative to the (typically unknown) optimal value of a problem instance. To assess a heuristic's suitability in this scenario, one can evaluate it on a set of instances for which the optimal value is known. However, when used on a new problem instance, the heuristic's solution can only be assessed via its (absolute) objective value. This situation arises when the CO problem of interest is practically intractable with an exact solver. For example, many vehicle routing problems admit strong MIP formulations that have an exponential number of variables or constraints, similar to the TSP formulation in Example 2, see (Toth and Vigo, 2014). While such problems may be solved exactly using column or constraint generation (Dror et al., 1994), a heuristic that consistently finds good solutions within a short user-defined time limit may be preferable.
+    \item \textbf{Optimality is desired, but quickly finding a good solution is the priority} Because optimality is still of interest here, one would like to use an exact solver that is focused on the primal side. A common use case is to take a good solution and start analyzing it manually in the current application context while the exact solver keeps running in the background. An early feasible solution allows for fast decision-making, early termination of the solver, or even revisiting the mathematical model with additional constraints that were initially ignored. MIP solvers usually provide a parameter that can be set to emphasize finding solutions quickly; see CPLEX's emphasis switch parameter for an example.\footnote{\url{https://www.ibm.com/support/knowledgecenter/SSSA5P_20.1.0/ilog.odms.cplex.help/CPLEX/Parameters/topics/MIPEmphasis.html}} Among other measures, these parameters increase the time or iterations allotted to primal heuristics at nodes of the search tree, which improves the odds of finding a good solution early on in the search.
+\end{enumerate}
+
+Alternatively, one could also develop a custom, standalone heuristic that is executed first, providing a warm start solution to the exact solver. This simple approach is widely used and addresses both goals a) and b) simultaneously when the heuristic in question is effective for the problem of interest. This can also be done in order to obtain a high-quality first solution for initiating a local search.
+
+\subsection{Algorithmic Reasoning}
+
+Neural networks are traditionally powerful in the interpolation regime, i.e., when we expect the distribution of unseen (``test'') inputs to roughly match the distribution of the inputs used to train the network. However, they tend to struggle when extrapolating, i.e., when they are evaluated out-of-distribution. For example, merely increasing the test input size, e.g., the number of nodes in the input graph, is often sufficient to lose most of the training's predictive power.
+
+Extrapolating is a potentially important issue for tackling CO problems with (G)NNs trained end-to-end. As a critical feature of a powerful reasoning system, it should apply to any plausible input, not just ones within the training distribution. Therefore, unless we can accurately foreshadow the kinds of inputs our neural CO approach will be solving, it could be essential to address the issue of out-of-distribution generalization in neural networks meaningfully.
+
+One resurging research direction that holds much promise here is algorithmic reasoning, i.e., directly introducing concepts from classical algorithms (Cormen et al., 2009) into neural network architectures or training regimes, typically by learning how to execute them. Classical algorithms have precisely the kind of favorable properties (strong generalization, compositionality, verifiable correctness) that would be desirable for neural network reasoners. Bringing the two sides closer together can therefore yield the kinds of improvements to performance, generalization, and interpretability that are unlikely to occur through architectural gains alone.
+
+Powered by the rapid development of GNNs, algorithmic reasoning experienced a strong resurgence, tackling combinatorial algorithms of superlinear complexity with graph-structured processing at the core. Initial theoretical analyses (Xu et al., 2019b) demonstrate why this is a good idea, GNNs align with dynamic programming (Bellman, 1966), which is a language in which most algorithms can be expressed. Hence, it is viable that most polynomial-time combinatorial reasoners of interest will be modelable using a GNN. We will now investigate alignment in more detail.
+
+\subsubsection{Algorithmic alignment}
+
+The concept of algorithmic alignment introduced by Xu et al. (2019b) is central to constructing effective algorithmic reasoners that extrapolate better. Informally, a neural network aligns with an algorithm if that algorithm can be partitioned into several parts, each of which can be ``easily'' modeled by one of the neural network's modules. Essentially, alignment relies on designing neural networks' components and control flow such that they line up well with the underlying algorithm to be learned from data.
+
+The work of Veli{\v c}kovi{\' c} et al. (2020b) on the neural execution of graph algorithms is among the first to propose algorithmic learning as a first-class citizen and suggests several general-purpose modifications to GNNs to make them stronger combinatorial reasoners.
+
+All of the executors listed above focus on performing message passing over exactly the nodes provided by the input graph, never modifying this node set during execution. This fundamentally limits them to simulating algorithms with up to O(1) auxiliary space per node. The persistent message passing (PMP) model of Strathmann et al. (2021) has lifted this restriction: by taking inspiration from persistent data structures (Driscoll et al., 1989), PMP allows the GNN to selectively persist their nodes’ state after every step of message passing. Now the nodes’ latent state is never overwritten; instead, a copy of the persisted nodes is performed, storing their new latents. This effectively endows PMP with an episodic memory (Pritzel et al., 2017) of its past computations, and has the potential to overcome more general problematic aspects in learning GNNs, such as oversmoothing.
+
+\subsubsection{Perspectives and outlooks}
+
+While all of the above dealt with improving the performance of GNNs when reasoning algorithmically, for some combinatorial applications, we require the algorithmic performance to always remain perfect|a trait known as strong generalization (Li et al., 2020). Strong generalization was demonstrated to be possible. That is, neural execution engines (NEEs) (Yan et al., 2020) are capable of maintaining $100\%$ accuracy on various combinatorial tasks by leveraging several low-level constructs, learning individual primitive units of computation, such as addition, multiplication, or argmax, in isolation. Moreover, they employ explicit masking inductive biases and binary representations of inputs. Here, the focus is less on learning the algorithm itself|the dataflow between the computation units is provided in a hard-coded way, allowing for zero-shot transfer of units between related algorithms.
 
 
 
