@@ -40,31 +40,12 @@
 \newcommand{\putbgdark}{\usebackgroundtemplate{\includegraphics[width=\paperwidth,height=\paperheight]{background-vector-dark_169}}}
 
 
-%%% Math
-\usepackage{amsfonts}
-\usepackage{amsthm}
-\usepackage{amsmath}
-\usepackage{amssymb}
-
-%%% Algorithms
-\usepackage{algorithm}
-\usepackage{algcompatible}
-\usepackage{algpseudocode}
-\renewcommand{\Comment}[2][.34\linewidth]{%
-  \leavevmode\hfill\makebox[#1][l]{$\triangleright$~#2}} % To align the comments
-  
-%%% Symbols
-\newcommand{\uv}{\mathbf{u}}    % u vector
-\newcommand{\ev}{\mathbf{e}}    % e vector
-\newcommand{\vv}{\mathbf{v}}    % v vector
-\newcommand{\NN}{\mathrm{NN}}
-\def\globals{\mathbf{u}}
-
 \usepackage[export]{adjustbox}
 \usepackage[]{enumitem}
 \usepackage{datetime}
 \usepackage{textpos}
 \usepackage{marvosym} % Smile
+\usepackage{fontawesome5} % Icons
 \usepackage{wrapfig} % To wrap figures wih text
 \usepackage{cleveref} % To fix autoref links not working
 % Fixes bad positioning of hats
@@ -139,13 +120,15 @@
 
 \begin{frame}{Aim of the project}
 
-    \alert{Graph Neural Networks} can have a lot of meanings, there isn't just one architecture that can be recognized as “GNN”. We will try to understand the general, abstract structure of a GNN that is presented in the book \cite{HamiltonGRLBook} (which also includes \cite{battaglia2018relational}) and to shed light about the relational inductive bias and combinatorial generalization of a GNN.
+    \alert{Graph Neural Networks} can have a lot of meanings, there isn't just one architecture that can be recognized as “GNN”. We will try to understand the general, abstract structure of a GNN that is presented in the book \cite{HamiltonGRLBook} and to shed light about the relational inductive bias (presented in \cite{battaglia2018relational}) and combinatorial generalization of a GNN (described in \cite{cappart2021combinatorial}).
     
     Our motivation is to better understand the extent to which graph neural networks are capable of \textbf{precise and logical reasoning}.
     
-    Our motivation is to better understand the extent to which graph neural networks are capable of \textbf{predict something, given a graph structured dataset}.
+    We will firstly present the \alert{theory} behind GNN, to understand what they are capable of and their limitations, then we will show a \alert{practical implementation} to make a \emph{graph prediction}, using the library DGL (\href{https://docs.dgl.ai/en/0.6.x/index.html}{documentation}).
     
-    Our goal is to understand why GNNs are needed and how it works in respect to a "classic" deep learning structure.
+    %Our motivation is to better understand the extent to which graph neural networks are capable of \textbf{predict something, given a graph structured dataset}.
+    
+    %Our goal is to understand why GNNs are needed and how it works in respect to a "classic" deep learning structure.
     
 \end{frame}
 
@@ -158,10 +141,14 @@
 \begin{frame}{Introduction}
     
     Graphs are a widespread data structure and a universal language for describing and modelling complex systems. In the most general view, a graph is simply a collection of objects (i.e., nodes), along with a set of interactions (i.e., edges) between pairs of these objects. 
-
+    \bigskip
+    
     \begin{columns}[onlytextwidth]
         \begin{column}{.5\textwidth-.25cm}
             Graphs are an important building block since they can naturally encode an \alert{entity-relationship structure}, as well as an \alert{invariance to permutations} (of both nodes and edges) and awareness of \alert{input sparsity}.
+            \bigskip
+            
+            The following discussion is taken from the book \cite{HamiltonGRLBook}.
         \end{column}
         \begin{column}{.5\textwidth-.25cm}
             \begin{figure}
@@ -212,8 +199,6 @@
     \end{itemize}
 
 \end{frame}
-3
-
 
 
 \begin{frame}{Blurring the boundaries of ML categories}
@@ -267,11 +252,16 @@
 \begin{frame}{Graph-level hand-engineered features}
 
     \begin{block}{Bag of nodes}
-        The simplest approach to defining a graph-level feature is to just aggregate node-level statistics. For example, one can compute histograms or other summary statistics based on the degrees, centralities, and clustering coefficients of the nodes in the graph. This aggregated information can then be used as a graph-level representation. The downside to this approach is that it is entirely based upon local node-level information and can miss important global properties in the graph.
+        The simplest approach is to just \alert{aggregate node-level statistics}. For example, one can compute \emph{histograms} or other \emph{summary statistics} based on the degrees, centralities, and clustering coefficients of the nodes in the graph. This aggregated information can then be used as a graph-level representation.
+        \smallskip
+        
+        \textbf{Downside:} it is entirely based upon local node-level information and can miss important global properties in the graph.
     \end{block}
     
     \begin{block}{Iterative neighborhood aggregation}
-        One way to improve the basic bag of nodes approach is using a strategy of \alert{iterative neighborhood aggregation}. The idea with these approaches is to extract node-level features that contain more information than just their local ego graph, and then to aggregate these richer features into a graph-level representation (e.g. \emph{WeisfeilerLehman (WL) algorithm and kernel, graphlets or path-based methods}).
+        One way to improve the basic bag of nodes approach is using a strategy of \alert{iterative neighborhood aggregation}. The idea with these approaches is to \emph{extract node-level features} that contain more information than just their local graph, and then to \emph{aggregate} these richer features into a graph-level representation.
+        
+        \textbf{Examples:} \emph{WeisfeilerLehman (WL) algorithm and kernel, graphlets or path-based methods}.
     \end{block}
     
 \end{frame}
@@ -514,11 +504,11 @@
     
 \end{frame}
 
-\begin{frame}{f}
+\begin{frame}{Graph-level Equations}
     
-    Any GNNs can also be succinctly defined using graph-level equations. In the case of a basic GNN, we can write the graph-level definition of the model as follows:
+    Any GNNs can also be succinctly defined using \alert{graph-level equations}. In the case of a basic GNN, we can write the graph-level definition of the model as follows:
     \begin{equation}
-        \mathbf H^{(k)} = \sigma \left( \mathbf{A H}^{(k-1)} \mathbf W_\text{neigh}^{(k)} + \mathbf H^{(k-1)} \mathbf W_\text{self}^{(k)} \right),
+        \mathbf H^{(k)} = \sigma \left( \mathbf H^{(k-1)} \mathbf W_\text{self}^{(k)} + \mathbf{A H}^{(k-1)} \mathbf W_\text{neigh}^{(k)} \right),
     \end{equation}
     where $\mathbf H^{(k)} \in \mathbb R^{|V| \times d}$ denotes the matrix of node representations at layer $k$ in the GNN (with each node corresponding to a row in the matrix), $\mathbf A$ is the graph adjacency matrix, and we have omitted the bias term for notational simplicity.
     
@@ -526,12 +516,10 @@
         \begin{minipage}{0.49\textwidth}
             \caption{Overview of encoding in the neighborhood aggregation methods.
             To generate an embedding for node \texttt{A}, the model aggregates messages from \texttt{A}'s local graph neighbors (\textit{i.e.}, \texttt{B}, \texttt{C}, and \texttt{D}), and in turn, the messages coming from these neighbors are based on information aggregated from their respective neighborhoods, and so on.
-            A ``depth-2'' version of this idea is shown (\textit{i.e.}, information is aggregated from a two-hop neighborhood around node \texttt{A}), but in principle these methods can be of an arbitrary depth.
-            %At the final ``depth'' or ``layer'' the initial messages are based on the input node attributes.
-            % Overview of how a single node aggregates messages from its local neighborhood. The model aggregates messages from \texttt{A}'s local graph neighbors (\textit{i.e.}, \texttt{B}, \texttt{C}, and \texttt{D}), and in turn, the messages coming from these neighbors are based on information aggregated from their respective neighborhoods, and so on. This visualization shows a two-layer version of a message-passing model. Notice that the computation graph of the GNN forms a tree structure by unfolding the neighborhood around the target node.
+            % Overview of how a single node aggregates messages from its local neighborhood.
         }
         \end{minipage}
-        \begin{minipage}[b]{0.49\textwidth}
+        \begin{minipage}[c]{0.49\textwidth}\hfill
             \includegraphics[width=1.1\textwidth]{neigh_agg_new.pdf}
         \end{minipage}
         \label{fig:neigh_agg}
@@ -629,6 +617,22 @@
 \end{frame}
 
 
+\begin{frame}{Over-smoothing}
+
+    \textbf{Problem:} As more layers are added our learned embeddings become very similar to one another, approaching an \alert{almost-uniform distribution}, which \alert{hurts performance}.\\
+    $\longrightarrow$ common in basic GNN models and models that employ the selfloop update approach.
+    
+    We can expect oversmoothing in cases where the information being aggregated from the node neighbors in $\mathbf m_{\mathcal N(u)}$ during message passing begins to \alert{dominate} the node representations from previous layers $\mathbf h_u^{(k-1)}$.
+    
+    \textbf{Solution:} use vector concatenations or \alert{skip connections} to preserve more (node-level) information from previous rounds of message passing during the update step:
+    \begin{equation}
+    \textsc{update}_\text{concat}(\mathbf h_u, \mathbf m_{\mathcal N(u)}) = [\textsc{update}_\text{base}(\mathbf h_u, \mathbf m_{\mathcal N(u)}) \oplus \mathbf h_u],
+    \end{equation}
+    where we simply concatenate the output of the \emph{base update function} with the node's \emph{previous-layer representation}. So we encourage the model to disentangle information during message passing --- separating the information coming from the neighbors (i.e., $\mathbf m_{\mathcal N(u)}$) from the current representation of each node (i.e., $\mathbf h_u$).
+    
+\end{frame}
+
+
 \begin{frame}{Graph Pooling}
 
     What if we want to learn an embedding $\mathbf z_G$ for the entire graph $G$? $\longrightarrow$ \alert{graph pooling}
@@ -646,6 +650,40 @@
     \textbf{Limitation}: it does not exploit the structure of the graph! We want to exploit the graph topology at the pooling stage $\longrightarrow$ use \alert{graph clustering or coarsening}
     
 \end{frame}
+
+
+\begin{frame}[allowframebreaks]{Graph Neural Networks in Practice}
+%GNN real-world applications
+
+    In the vast majority of current real-world applications, GNNs are used for:
+    \begin{itemize}
+        \item[\alert{$\bullet$}] \emph{Node Classification} $\rightarrow$ train GNNs in a fully-supervised manner with a negative log-likelihood loss:
+        \begin{equation}
+            \mathcal L = \sum_{u \in V_\text{train}} -\log(\text{softmax}(\mathbf z_u, \mathbf y_u))
+            \label{eq:lossnodeclass}
+        \end{equation}
+        where $\mathbf y_u$ is a one-hot vector indicating the class of training node $u \in V_\text{train}$ and we use $\text{softmax}(\mathbf z_u, \mathbf y_u)$ to denote the predicted probability that the node belongs to the class $\mathbf y_u$, computed via the $\text{softmax}$ function:
+        \begin{equation}
+            \text{softmax}(\mathbf z_u, \mathbf y_u) = \sum^c_{i=1} \mathbf y_u[i] \frac{e^{\mathbf z_u^\top \mathbf w_i}}{\sum^c_{j=1} e^{\mathbf z_u^\top \mathbf w_j}},
+        \end{equation}
+        where $\mathbf w_i \in \mathbb R^d, i = 1, \ldots, c$ are trainable parameters.
+        
+        \item[\alert{$\bullet$}] \emph{Graph Classification} $\rightarrow$ use a softmax classification loss --- analogous to \Cref{eq:lossnodeclass} --- with the key difference that the loss is computed with graph-level embeddings $\mathbf z_{G_i}$ over a set of labeled training graphs $\mathcal G = \{G_1, \ldots, G_n\}$.
+        
+        \item[\alert{$\bullet$}] \emph{Graph Regression} $\rightarrow$ employ a squared-error loss of the following form:
+        \begin{equation}
+            \mathcal L = \sum_{G_i \in \mathcal G} \| \textbf{MLP}(\mathbf z_{G_i}) - y_{G_i}\|_2^2,
+        \end{equation}
+        where $\textbf{MLP}$ is a densely connected neural network with a univariate output and $y_{G_i} \in \mathbb R$ is the target value for training graph $G_i$.
+        
+        \item[\alert{$\bullet$}] \emph{Edge Prediction} $\rightarrow$ employ the pairwise node embedding loss functions. In principle, GNNs can be combined with any pairwise loss function, with the output of the GNNs replacing the shallow embeddings.
+    \end{itemize}
+\end{frame}
+
+
+{\putbg
+\section{Relational Inductive Biases and GNN}
+}
 
 
 \begin{frame}{Generalized Message Passing}
@@ -684,73 +722,7 @@
 \end{frame}
 
 
-\begin{frame}{}
-    
-    \begin{minipage}{\textwidth}
-    \begin{algorithm}[H]
-        \begin{algorithmic}
-        \Function{GraphNetwork}{$\{ \mathbf h_{(u,v)}^{(k-1)}, \forall (u, v) \in E\}$, $\{ \mathbf h_u^{(k-1)}, \, \forall u \in V\}$, $h_G^{(k-1)}$}
-            \For {$(u, v) \in |E|$}
-                \State $\mathbf h^{(k)}_{(u,v)} \gets \textsc{update}_\text{edge} (\mathbf h_{(u,v)}^{(k-1)}, \mathbf h_u^{(k-1)}, \mathbf h_v^{(k-1)}, \mathbf h_G^{(k-1)})$
-                \Comment{1. Compute updated edge attributes}
-            \EndFor
-            \For {$u \in |V|$}
-                \State $\mathbf m_{\mathcal N(u)}^{(k)} \gets \textsc{aggregate}_{e \to v}(\{ \mathbf h_{(u,v)}^{(k)}, \; \forall v \in \mathcal N(u) \})$
-                \Comment{2. Aggregate edge attributes per node}
-                \State $\mathbf h^{(k)}_u \gets \textsc{update}_\text{node} ( \mathbf h_u^{(k-1)}, \mathbf m_{\mathcal N(u)}, \mathbf h_G^{(k-1)})$
-                \Comment{3. Compute updated node attributes}
-            \EndFor
-            \State $\textbf m_{e}^{(k)} \gets \textsc{aggregate}_{e \to G} \left( \{ \mathbf h_{(u,v)}^{(k)}, \forall (u, v) \in E\} \right)$
-            \Comment{4. Aggregate edge attributes globally}
-            \State $\textbf m_{v}^{(k)} \gets \textsc{aggregate}_{v \to G} \left( \{ \mathbf h_u^{(k)}, \, \forall u \in V\} \right)$
-            \Comment{5. Aggregate node attributes globally}
-            \State $\mathbf h^{(k)}_G \gets \textsc{update}_\text{graph}(\mathbf h_G^{( k-1)}, \textbf m_{v}^{(k)}, \textbf m_{e}^{(k)})$
-            \Comment{6. Compute updated global attribute}
-            \State \Return $\{ \mathbf h_{(u,v)}^{(k)}, \forall (u, v) \in E\}$, $\{ \mathbf h_u^{(k)}, \, \forall u \in V\}$, $h_G^{(k-1)}$
-        \EndFunction
-        \end{algorithmic}
-        \caption{Steps of computation in a GNN layer.}
-        \label{alg:gn}
-    \end{algorithm}
-    \end{minipage}
-    
-\end{frame}
-
-
-\begin{frame}[allowframebreaks]{Graph Neural Networks in Practice}
-%GNN real-world applications
-
-    In the vast majority of current real-world applications, GNNs are used for:
-    \begin{itemize}
-        \item[\alert{$\bullet$}] \emph{Node Classification} $\rightarrow$ train GNNs in a fully-supervised manner with a negative log-likelihood loss:
-        \begin{equation}
-            \mathcal L = \sum_{u \in V_\text{train}} -\log(\text{softmax}(\mathbf z_u, \mathbf y_u))
-            \label{eq:lossnodeclass}
-        \end{equation}
-        where $\mathbf y_u$ is a one-hot vector indicating the class of training node $u \in V_\text{train}$ and we use $\text{softmax}(\mathbf z_u, \mathbf y_u)$ to denote the predicted probability that the node belongs to the class $\mathbf y_u$, computed via the $\text{softmax}$ function:
-        \begin{equation}
-            \text{softmax}(\mathbf z_u, \mathbf y_u) = \sum^c_{i=1} \mathbf y_u[i] \frac{e^{\mathbf z_u^\top \mathbf w_i}}{\sum^c_{j=1} e^{\mathbf z_u^\top \mathbf w_j}},
-        \end{equation}
-        where $\mathbf w_i \in \mathbb R^d, i = 1, \ldots, c$ are trainable parameters.
-        
-        \item[\alert{$\bullet$}] \emph{Graph Classification} $\rightarrow$ use a softmax classification loss --- analogous to \Cref{eq:lossnodeclass} --- with the key difference that the loss is computed with graph-level embeddings $\mathbf z_{G_i}$ over a set of labeled training graphs $\mathcal G = \{G_1, \ldots, G_n\}$.
-        
-        \item[\alert{$\bullet$}] \emph{Graph Regression} $\rightarrow$ employ a squared-error loss of the following form:
-        \begin{equation}
-            \mathcal L = \sum_{G_i \in \mathcal G} \| \textbf{MLP}(\mathbf z_{G_i}) - y_{G_i}\|_2^2,
-        \end{equation}
-        where $\textbf{MLP}$ is a densely connected neural network with a univariate output and $y_{G_i} \in \mathbb R$ is the target value for training graph $G_i$.
-        
-        \item[\alert{$\bullet$}] \emph{Edge Prediction} $\rightarrow$ employ the pairwise node embedding loss functions. In principle, GNNs can be combined with any pairwise loss function, with the output of the GNNs replacing the shallow embeddings.
-    \end{itemize}
-\end{frame}
-
-
-{\putbg
-\section{Combinatorial Optimization and Reasoning with GNN}}
-
-
-\begin{frame}{Relational Inductive Biases in GNN - \cite{battaglia2018relational}}
+\begin{frame}{Relational Inductive Biases in GNN}
 
     \begin{block}{}
         \alert{Relational inductive biases} are inductive biases\footnote{An inductive bias allows a learning algorithm to prioritize one solution (or interpretation) over another, independent of the observed data. E.g., in a Bayesian model it is the choice and parameterization of the prior.} which impose constraints on relationships and interactions among entities in a learning process.
@@ -767,15 +739,67 @@
 \end{frame}
 
 
-\begin{frame}{Frame Title - \cite{cappart2021combinatorial}}
+{\putbg
+\section{Combinatorial Optimization and Reasoning with GNN}
+}
 
-    The inductive bias of GNNs effectively encodes combinatorial and relational input due to their invariance to permutations and awareness of input sparsity.
+
+\begin{frame}{ML and CO}
+
+    The inductive bias of GNNs effectively encodes \emph{combinatorial} and \emph{relational} input due to their \alert{invariance to permutations} and \alert{awareness of input sparsity}.
     
-    Intuitively, CO deals with problems that involve optimizing a cost (or objective) function by selecting a subset from a finite set, with the latter encoding constraints on the solution space.
+    \begin{block}{\alert{Combinatorial Optimization}}
+        CO deals with problems that involve optimizing a cost (or objective) function by selecting a subset from a finite set, with the latter encoding constraints on the solution space.
+    \end{block}
     
-    Beyond using standard GNN models for CO, the emerging paradigm of algorithmic reasoning provides new perspectives on designing and training GNNs that satisfy natural invariants and properties, enabling improved generalization and interpretability.
+    The key challenges in ML for CO are:
+    \begin{itemize}
+        \item[\alert{$\bullet$}] ML methods that operate on graph data have to be \alert{invariant} to node \alert{permutations} and should exploit the graph \alert{sparsity} (CO problems are large and usually sparse).
+        \item[\alert{$\bullet$}] Models should \alert{distinguish} relevant \alert{patterns} in the data and \alert{scale} to large instances.
+        \item[\alert{$\bullet$}] \alert{Side information}, i.e. high-dimensional vectors of features, needs to be considered.
+        \item[\alert{$\bullet$}] Models should be \alert{data-efficient}, i.e. work without requiring large amounts of labeled data (thus avoiding solving many hard CO problems, which can be prohibitive), and they should be transferable to \alert{out-of-sample} instances.
+    \end{itemize}
     
-    Neural networks are traditionally powerful in the interpolation regime, i.e., when we expect the distribution of unseen (``test'') inputs to roughly match the distribution of the inputs used to train the network. However, they tend to struggle when extrapolating, i.e., when they are evaluated out-of-distribution. For example, merely increasing the test input size, e.g., the number of nodes in the input graph, is often sufficient to lose most of the training's predictive power. Extrapolating is a potentially important issue for tackling CO problems with (G)NNs trained end-to-end. As a critical feature of a powerful reasoning system, it should apply to any plausible input, not just ones within the training distribution. Therefore, unless we can accurately foreshadow the kinds of inputs our neural CO approach will be solving, it could be essential to address the issue of out-of-distribution generalization in neural networks meaningfully.
+\end{frame}
+
+
+\begin{frame}{GNNs and CO}
+
+    \alert{GNNs} have recently emerged as machine learning architectures that (partially) address the previous challenges. The promise is that the learned vector representation of GNN encodes crucial graph structures that help solve a CO problem more efficiently.
+    \begin{itemize}
+        \item[\alert{$\bullet$}] GNNs are \alert{invariant and equivariant} by design, i.e., they automatically exploit the invariances or symmetries inherent to the given instance or data distribution.
+        \item[\alert{$\bullet$}] Due to their local nature, by aggregating neighborhood information, GNNs naturally \alert{exploit sparsity}, leading to more scalable models on sparse inputs.
+        \item[\alert{$\bullet$}] Moreover, although scalability is still an issue, they \alert{scale linearly} with the number of edges and employed parameters, while taking multi-dimensional node and edge features into account, naturally exploiting cost and objective function information.
+        \item[\alert{$\bullet$}] However, the \alert{data-efficiency} question is still largely open.
+    \end{itemize}
+    
+    GNNs align with dynamic programming, which is a language in which most algorithms can be expressed. Hence, it is viable that most polynomial-time combinatorial reasoners of interest will be modelable using a GNN.
+    
+\end{frame}
+    
+
+% \begin{frame}{Frame}
+
+%     Beyond using standard GNN models for CO, the emerging paradigm of algorithmic reasoning provides new perspectives on designing and training GNNs that satisfy natural invariants and properties, enabling improved generalization and interpretability.
+    
+%     Neural networks are traditionally powerful in the interpolation regime, i.e., when we expect the distribution of unseen (``test'') inputs to roughly match the distribution of the inputs used to train the network. However, they tend to struggle when extrapolating, i.e., when they are evaluated out-of-distribution. For example, merely increasing the test input size, e.g., the number of nodes in the input graph, is often sufficient to lose most of the training's predictive power.
+    
+%     Extrapolating is a potentially important issue for tackling CO problems with (G)NNs trained end-to-end. As a critical feature of a powerful reasoning system, it should apply to any plausible input, not just ones within the training distribution. Therefore, unless we can accurately foreshadow the kinds of inputs our neural CO approach will be solving, it could be essential to address the issue of out-of-distribution generalization in neural networks meaningfully.
+    
+% \end{frame}
+
+
+\begin{frame}{Algorithmic reasoning}
+
+    \begin{block}{\alert{Algorithmic reasoning}}
+    Directly introduces concepts from classical algorithms into neural network architectures or training regimes, typically by learning how to execute them.
+    \end{block}
+    
+    $\longrightarrow$ Classical algorithms have strong generalization, compositionality, verifiable correctness, which with NNs would yield improvements to performance, generalization, and interpretability.
+
+    Using GNNs, algorithmic reasoning can tackle combinatorial algorithms of superlinear complexity with graph-structured processing at the core.
+    
+    The concept of \alert{algorithmic alignment} is central to constructing effective algorithmic reasoners that extrapolate better. Informally, a neural network aligns with an algorithm if that algorithm can be partitioned into several parts, each of which can be ``easily'' modeled by one of the neural network's modules, like in Veli{\v c}kovi{\' c} et al. \cite{veličković2020neural} and Yan et al. \cite{yan2020neural}.
     
 \end{frame}
 
@@ -783,7 +807,7 @@
 {\putbgdark
 \begin{frame}[standout]
 	\begin{center}
-		\Large \uncover<+->{Thank you for your attention!}
+		\Large \uncover<+->{End of theory}
 		
 		\Huge\uncover<+->{\Smiley}
 	\end{center}
@@ -796,5 +820,17 @@
 	\printbibliography
 
 \end{frame}
+
+
+{\putbgdark
+\begin{frame}[standout]
+	\begin{center}
+		\Large \uncover<+->{To the code!}
+		
+		\Huge\uncover<+->{\faFileCode}
+	\end{center}
+\end{frame}
+}
+
 
 \end{document}

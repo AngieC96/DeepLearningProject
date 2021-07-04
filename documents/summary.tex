@@ -490,8 +490,7 @@ A theorem states that when we are using a K-layer GCN-style model, the influence
 
 As discussed above, over-smoothing is a core issue in GNNs. Over-smoothing occurs when node-specific information becomes ``washed out'' or ``lost'' after several iterations of GNN message passing. Intuitively, we can expect oversmoothing in cases where the information being aggregated from the node neighbors during message passing begins to dominate the updated node representations. A natural way to alleviate this issue is to use vector concatenations or skip connections, which try to directly preserve information from previous rounds of message passing during the update step.
 
-One of the simplest skip connection updates employs a concatenation to
-preserve more node-level information during message passing:
+One of the simplest skip connection updates employs a concatenation to preserve more node-level information during message passing:
 \begin{equation}
 \textsc{update}_\text{concat}(\mathbf h_u, \mathbf m_{\mathcal N(u)}) = [\textsc{update}_\text{base}(\mathbf h_u, \mathbf m_{\mathcal N(u)}) \oplus \mathbf h_u],
 \end{equation}
@@ -499,12 +498,11 @@ where we simply concatenate the output of the base update function with the node
 
 However, in addition to concatenation, we can also employ other forms of skip-connections, such as the \emph{linear interpolation method}\index{linear interpolation method}\marginpar{linear interpolation method}
 \begin{equation}
-    UPD\mathbf ATEinterpolate(hu; mN(u)) = α1 ◦ UPD\mathbf ATEbase(hu; mN(u)) + α2 hu;
+    \textsc{update}_\text{interpolate} ( \mathbf h_u, \mathbf m_{\mathcal N(u)}) = \alpha_1 \circ \textsc{update}_\text{base} (\mathbf h_u, \mathbf m_{\mathcal N(u)}) + \alpha_2 \mathbf h_u,
 \end{equation}
-where α1; α2 2 [0; 1]d are gating vectors with α2 = 1 − α1 and ◦ denotes elementwise multiplication. In this approach, the final updated representation is a linear interpolation between the previous representation and the representation that was updated based on the neighborhood information. The gating parameters α1 can be learned jointly with the model in a variety of ways.
+where $\alpha_1, \alpha_2 \in [0, 1]^d$ are gating vectors with $\alpha_2 = 1 - \alpha_1$ and $\circ$ denotes elementwise multiplication. In this approach, the final updated representation is a linear interpolation between the previous representation and the representation that was updated based on the neighborhood information. The gating parameters $\alpha_1$ can be learned jointly with the model in a variety of ways.
 
-In general, these concatenation and residual connections are simple strategies that can help to alleviate the over-smoothing issue in GNNs, while also improving the numerical stability of optimization. Indeed, similar to the utility of residual connections in convolutional neural networks (CNNs), applying these approaches to GNNs can facilitate the training of much deeper models. In practice these techniques tend to be most useful for node classification tasks with moderately deep GNNs (e.g., 2-5 layers), and they excel on tasks that exhibit homophily, i.e., where the prediction for each node is
-strongly related to the features of its local neighborhood.
+In general, these concatenation and residual connections are simple strategies that can help to alleviate the over-smoothing issue in GNNs, while also improving the numerical stability of optimization. Indeed, similar to the utility of residual connections in convolutional neural networks (CNNs), applying these approaches to GNNs can facilitate the training of much deeper models. In practice these techniques tend to be most useful for node classification tasks with moderately deep GNNs (e.g., 2-5 layers), and they excel on tasks that exhibit homophily, i.e., where the prediction for each node is strongly related to the features of its local neighborhood.
 
 \subsubsection{Gated Updates}
 
@@ -795,7 +793,7 @@ Summary of \cite{cappart2021combinatorial}.
 
 The inductive bias of GNNs effectively encodes combinatorial and relational input due to their invariance to permutations and awareness of input sparsity.
 
-\section{What are the Challenges for Machine Learning?}
+\section{Introduction}
 
 Intuitively, CO deals with problems that involve optimizing a cost (or objective) function by selecting a subset from a finite set, with the latter encoding constraints on the solution space.
 
@@ -847,11 +845,9 @@ The concept of algorithmic alignment introduced by Xu et al. (2019b) is central 
 
 The work of Veli{\v c}kovi{\' c} et al. (2020b) on the neural execution of graph algorithms is among the first to propose algorithmic learning as a first-class citizen and suggests several general-purpose modifications to GNNs to make them stronger combinatorial reasoners.
 
-All of the executors listed above focus on performing message passing over exactly the nodes provided by the input graph, never modifying this node set during execution. This fundamentally limits them to simulating algorithms with up to O(1) auxiliary space per node. The persistent message passing (PMP) model of Strathmann et al. (2021) has lifted this restriction: by taking inspiration from persistent data structures (Driscoll et al., 1989), PMP allows the GNN to selectively persist their nodes’ state after every step of message passing. Now the nodes’ latent state is never overwritten; instead, a copy of the persisted nodes is performed, storing their new latents. This effectively endows PMP with an episodic memory (Pritzel et al., 2017) of its past computations, and has the potential to overcome more general problematic aspects in learning GNNs, such as oversmoothing.
-
 \subsubsection{Perspectives and outlooks}
 
-While all of the above dealt with improving the performance of GNNs when reasoning algorithmically, for some combinatorial applications, we require the algorithmic performance to always remain perfect|a trait known as strong generalization (Li et al., 2020). Strong generalization was demonstrated to be possible. That is, neural execution engines (NEEs) (Yan et al., 2020) are capable of maintaining $100\%$ accuracy on various combinatorial tasks by leveraging several low-level constructs, learning individual primitive units of computation, such as addition, multiplication, or argmax, in isolation. Moreover, they employ explicit masking inductive biases and binary representations of inputs. Here, the focus is less on learning the algorithm itself|the dataflow between the computation units is provided in a hard-coded way, allowing for zero-shot transfer of units between related algorithms.
+While all of the above dealt with improving the performance of GNNs when reasoning algorithmically, for some combinatorial applications, we require the algorithmic performance to always remain perfect --- a trait known as strong generalization (Li et al., 2020). Strong generalization was demonstrated to be possible. That is, neural execution engines (NEEs) (Yan et al., 2020) are capable of maintaining $100\%$ accuracy on various combinatorial tasks by leveraging several low-level constructs, learning individual primitive units of computation, such as addition, multiplication, or argmax, in isolation. Moreover, they employ explicit masking inductive biases and binary representations of inputs. Here, the focus is less on learning the algorithm itself|the dataflow between the computation units is provided in a hard-coded way, allowing for zero-shot transfer of units between related algorithms.
 
 
 
