@@ -91,7 +91,7 @@
 %%% Metadati
 \graphicspath{{figures/PNG/}{figures/PDF/}{figures/}}
 \newdateformat{monthyear}{\monthname[\THEMONTH] \THEYEAR}
-\title{\vspace*{1.5cm}An algorithmic reasoning approach to GNNs}
+\title{\vspace*{1.5cm}An overview of GNNs and their expressivity}
 \subtitle{A project for the \emph{Deep Learning} course}
 \author{Angela Carraro, Matteo Scorcia}
 \date{}
@@ -120,11 +120,11 @@
 
 \begin{frame}{Aim of the project}
 
-    \alert{Graph Neural Networks} can have a lot of meanings, there isn't just one architecture that can be recognized as “GNN”. We will try to understand the general, abstract structure of a GNN that is presented in the book \cite{HamiltonGRLBook} and to shed light about the relational inductive bias (presented in \cite{battaglia2018relational}) and combinatorial generalization of a GNN (described in \cite{cappart2021combinatorial}).
+    \alert{Graph Neural Networks} can have a lot of meanings, there isn't just one architecture that can be recognized as “GNN”. We will try to understand the general, abstract structure of a GNN that is presented in Hamilton's book \cite{HamiltonGRLBook} and to shed light about the relational inductive bias (presented in Battaglia's paper \cite{battaglia2018relational}) and combinatorial generalization of a GNN (described in Cappart's paper \cite{cappart2021combinatorial}).
     
     Our motivation is to better understand the extent to which graph neural networks are capable of \textbf{precise and logical reasoning}.
     
-    We will firstly present the \alert{theory} behind GNN, to understand what they are capable of and their limitations, then we will show a \alert{practical implementation} to make a \emph{graph prediction}, using the library DGL (\href{https://docs.dgl.ai/en/0.6.x/index.html}{documentation}).
+    We will first present the \alert{theory} behind GNN, to understand what they are capable of and their limitations, then we will show a \alert{practical implementation} to make a \emph{graph prediction}, using the library DGL (\href{https://docs.dgl.ai/en/0.6.x/index.html}{documentation}).
     
     %Our motivation is to better understand the extent to which graph neural networks are capable of \textbf{predict something, given a graph structured dataset}.
     
@@ -220,56 +220,85 @@
 \end{frame}
 
 
-\begin{frame}{Node-level hand-engineered features}
+% \begin{frame}{Node-level hand-engineered features}
 
-     What are properties and statistics useful to characterize the nodes in a graph?
+%      What are properties and statistics useful to characterize the nodes in a graph?
 
-    \begin{block}{\alert{Node degree $d_u$}}
-        Number of edges incident to a node $u \in V$, so how many neighbors the node has:
-        \vspace{-0.2cm}
-        \begin{equation}
-            d_u = \sum_{v \in V} \mathbf A[u, v].
-            \label{eq:degree}
-        \end{equation}
-    \end{block}
+%     \begin{block}{\alert{Node degree $d_u$}}
+%         Number of edges incident to a node $u \in V$, so how many neighbors the node has:
+%         \vspace{-0.2cm}
+%         \begin{equation}
+%             d_u = \sum_{v \in V} \mathbf A[u, v].
+%             \label{eq:degree}
+%         \end{equation}
+%     \end{block}
     
-    To obtain a more powerful measure of \emph{importance}, we can measure the \alert{node centrality}.
+%     To obtain a more powerful measure of \emph{importance}, we can measure the \alert{node centrality}.
     
-    \begin{block}{\alert{Eigenvector centrality $e_u$}}
-        Recurrence relation in which the node's centrality is proportional, via a constant $\lambda$, to the average centrality of its neighbors:
-        \vspace{-0.2cm}
-        \begin{equation}
-            e_u = \frac1\lambda \sum_{v \in V} \mathbf A[u, v] e_v \; \forall u \in V \quad \Longleftrightarrow \quad \lambda \mathbf e = \mathbf A \mathbf e, \; \text{ with }\mathbf e \text{ vector of node centralities}.
-            \label{eq:eigencentr}
-            \vspace{-0.2cm}
-        \end{equation}
-        Perron-Frobenius theorem $\Longrightarrow \mathbf e$ is given by the eigenvector of $\mathbf A$'s largest eigenvalue.
-    \end{block}
+%     \begin{block}{\alert{Eigenvector centrality $e_u$}}
+%         Recurrence relation in which the node's centrality is proportional, via a constant $\lambda$, to the average centrality of its neighbors:
+%         \vspace{-0.2cm}
+%         \begin{equation}
+%             e_u = \frac1\lambda \sum_{v \in V} \mathbf A[u, v] e_v \; \forall u \in V \quad \Longleftrightarrow \quad \lambda \mathbf e = \mathbf A \mathbf e, \; \text{ with }\mathbf e \text{ vector of node centralities}.
+%             \label{eq:eigencentr}
+%             \vspace{-0.2cm}
+%         \end{equation}
+%         Perron-Frobenius theorem $\Longrightarrow \mathbf e$ is given by the eigenvector of $\mathbf A$'s largest eigenvalue.
+%     \end{block}
     
-\end{frame}
+% \end{frame}
 
 
-\begin{frame}{Graph-level hand-engineered features}
+% \begin{frame}{Graph-level hand-engineered features}
 
-    \begin{block}{Bag of nodes}
-        The simplest approach is to just \alert{aggregate node-level statistics}. For example, one can compute \emph{histograms} or other \emph{summary statistics} based on the degrees, centralities, and clustering coefficients of the nodes in the graph. This aggregated information can then be used as a graph-level representation.
-        \smallskip
+%     \begin{block}{Bag of nodes}
+%         The simplest approach is to just \alert{aggregate node-level statistics}. For example, one can compute \emph{histograms} or other \emph{summary statistics} based on the degrees, centralities, and clustering coefficients of the nodes in the graph. This aggregated information can then be used as a graph-level representation.
+%         \smallskip
         
-        \textbf{Downside:} it is entirely based upon local node-level information and can miss important global properties in the graph.
-    \end{block}
+%         \textbf{Downside:} it is entirely based upon local node-level information and can miss important global properties in the graph.
+%     \end{block}
     
-    \begin{block}{Iterative neighborhood aggregation}
-        One way to improve the basic bag of nodes approach is using a strategy of \alert{iterative neighborhood aggregation}. The idea with these approaches is to \emph{extract node-level features} that contain more information than just their local graph, and then to \emph{aggregate} these richer features into a graph-level representation.
+%     \begin{block}{Iterative neighborhood aggregation}
+%         One way to improve the basic bag of nodes approach is using a strategy of \alert{iterative neighborhood aggregation}. The idea with these approaches is to \emph{extract node-level features} that contain more information than just their local graph, and then to \emph{aggregate} these richer features into a graph-level representation.
         
-        \textbf{Examples:} \emph{WeisfeilerLehman (WL) algorithm and kernel, graphlets or path-based methods}.
-    \end{block}
+%         \textbf{Examples:} \emph{WeisfeilerLehman (WL) algorithm and kernel, graphlets or path-based methods}.
+%     \end{block}
     
-\end{frame}
+% \end{frame}
 
 
-\begin{frame}{Node-node Similarity Measures}
+% \begin{frame}{Node-node Similarity Measures}
 
-    Statistical \alert{measures of neighborhood overlap} between pairs of nodes $\longrightarrow$ quantify the extent to which a pair of nodes are related.
+%     Statistical \alert{measures of neighborhood overlap} between pairs of nodes $\longrightarrow$ quantify the extent to which a pair of nodes are related.
+    
+%     \begin{block}{}%
+%     E.g., simply count the number of neighbors that two nodes share:
+%     \begin{equation}
+%         \mathbf S[u, v] = |\mathcal N(u) \cap \mathcal N(v)|,
+%     \end{equation}
+%     where $\mathbf S[u, v]$ denotes the value quantifying the relationship between nodes $u$ and $v$ and let $\mathbf S \in \mathbb R^{|V| \times |V|}$ denote the \alert{similarity matrix} summarizing all the pairwise node statistics.
+%     \end{block}
+
+%     \textbf{Relation prediction} $\longrightarrow$ Given $\mathbf S[u, v]$, assume that the likelihood of an edge $(u, v)$ is
+%     \begin{equation}
+%         \mathbf P (\mathbf A[u, v] = 1) \propto \mathbf S[u, v],
+%     \end{equation}
+%     then set a threshold to determine when to predict the existence of an edge.
+    
+%     We know only a subset of the true edges $E_\text{train} \subset E$ and our hope is that $\mathbf S$ computed on it will lead to accurate predictions about the existence of test (unseen) edges.
+    
+% \end{frame}
+
+
+\begin{frame}{Graph statistics}
+
+    What are properties and statistics useful to characterize the elements in a graph?
+    
+    \alert{Node-level features} $\longrightarrow$ e.g., node degree $d_u$ or node centrality (eigenvector centrality $e_u$)
+    
+    \alert{Graph-level features} $\longrightarrow$ e.g. bag of nodes or iterative neighborhood aggregation
+
+    \alert{Neighborhood overlap measures} between pairs of nodes $\longrightarrow$ quantify the extent to which a pair of nodes are related.
     
     \begin{block}{}%
     E.g., simply count the number of neighbors that two nodes share:
@@ -278,14 +307,6 @@
     \end{equation}
     where $\mathbf S[u, v]$ denotes the value quantifying the relationship between nodes $u$ and $v$ and let $\mathbf S \in \mathbb R^{|V| \times |V|}$ denote the \alert{similarity matrix} summarizing all the pairwise node statistics.
     \end{block}
-
-    \textbf{Relation prediction} $\longrightarrow$ Given $\mathbf S[u, v]$, assume that the likelihood of an edge $(u, v)$ is
-    \begin{equation}
-        \mathbf P (\mathbf A[u, v] = 1) \propto \mathbf S[u, v],
-    \end{equation}
-    then set a threshold to determine when to predict the existence of an edge.
-    
-    We know only a subset of the true edges $E_\text{train} \subset E$ and our hope is that $\mathbf S$ computed on it will lead to accurate predictions about the existence of test (unseen) edges.
     
 \end{frame}
 
@@ -545,7 +566,7 @@
         \mathbf H^{(k)} = \sigma \left( (\mathbf A + \mathbf I) \mathbf H^{(k-1)} \mathbf W^{(k)} \right) .
     \end{equation}
     
-    \textbf{Benefits:} no longer need to define an explicit update function and this simplification \alert{alleviates overfitting}, but it also severely \alert{limits the expressivity} of the GNN
+    \textbf{Benefits:} no longer need to define an explicit update function and this simplification \alert{alleviates overfitting}, but it also severely \alert{limits the expressivity} of the GNN.
     %as the information coming from the node's neighbours cannot be differentiated from the information from the node itself.
 
 \end{frame}
@@ -573,48 +594,48 @@
 \end{frame}
 
 
-\begin{frame}{Improving the Aggregation Layer}
+% \begin{frame}{Improving the Aggregation Layer}
 
-    An aggregation function with the following form is a \alert{universal set function approximator}:
-    \begin{equation}
-        \mathbf m_{\mathcal N(u)} = \textbf{MLP}_\theta \left( \sum_{v \in \mathcal N(u)} \textbf{MLP}_\phi (\mathbf h_v) \right).
-        \label{eq:univsetapproxf}
-    \end{equation}
-    So any permutation-invariant function that maps a set of embeddings to a single embedding can be approximated to an arbitrary accuracy by a model using \Cref{eq:univsetapproxf}.\\
-    $\longrightarrow$ \alert{set pooling} leads small increases in performance but increased risk of overfitting
+%     An aggregation function with the following form is a \alert{universal set function approximator}:
+%     \begin{equation}
+%         \mathbf m_{\mathcal N(u)} = \textbf{MLP}_\theta \left( \sum_{v \in \mathcal N(u)} \textbf{MLP}_\phi (\mathbf h_v) \right).
+%         \label{eq:univsetapproxf}
+%     \end{equation}
+%     So any permutation-invariant function that maps a set of embeddings to a single embedding can be approximated to an arbitrary accuracy by a model using \Cref{eq:univsetapproxf}.\\
+%     $\longrightarrow$ \alert{set pooling} leads small increases in performance but increased risk of overfitting
     
-    Another strategy is to apply \alert{attention}: assign an attention weight or importance to each neighbor, which is used to weigh this neighbor's influence during the aggregation step. The first GNN model to apply this style of attention was the \alert{Graph Attention Network (GAT)}:
-    \begin{equation}
-        \mathbf m_{\mathcal N(u)} = \sum_{v \in \mathcal N(u)} \alpha_{u,v} \mathbf h_v,
-    \end{equation}
-    where $\alpha_{u,v}$ denotes the attention on neighbor $v \in \mathcal N(u)$ (\emph{neighborhood attention}) when we are aggregating information at node $u$.
+%     Another strategy is to apply \alert{attention}: assign an attention weight or importance to each neighbor, which is used to weigh this neighbor's influence during the aggregation step. The first GNN model to apply this style of attention was the \alert{Graph Attention Network (GAT)}:
+%     \begin{equation}
+%         \mathbf m_{\mathcal N(u)} = \sum_{v \in \mathcal N(u)} \alpha_{u,v} \mathbf h_v,
+%     \end{equation}
+%     where $\alpha_{u,v}$ denotes the attention on neighbor $v \in \mathcal N(u)$ (\emph{neighborhood attention}) when we are aggregating information at node $u$.
     
-\end{frame}
+% \end{frame}
 
 
-\begin{frame}{Visualize a single GAT step}
+% \begin{frame}{Visualize a single GAT step}
 
-    \begin{columns}[onlytextwidth]
-        \begin{column}{.5\textwidth}
-            \begin{figure}
-                \centering
-                \includegraphics[width=0.65\textwidth]{figures/GAT_step_1.png}
-                \caption{Attention mechanism. It looks at features of node $i$ and its neighbor $j$, then the attention function computes the coefficient $\alpha_{ij}$, which signifies the influence of node $i$ to node $j$.}
-                \label{fig:GAT_step_1}
-            \end{figure}
-        \end{column}
+%     \begin{columns}[onlytextwidth]
+%         \begin{column}{.5\textwidth}
+%             \begin{figure}
+%                 \centering
+%                 \includegraphics[width=0.65\textwidth]{figures/GAT_step_1.png}
+%                 \caption{Attention mechanism. It looks at features of node $i$ and its neighbor $j$, then the attention function computes the coefficient $\alpha_{ij}$, which signifies the influence of node $i$ to node $j$.}
+%                 \label{fig:GAT_step_1}
+%             \end{figure}
+%         \end{column}
         
-        \begin{column}{.5\textwidth}
-            \begin{figure}
-                \centering
-                \includegraphics[width=0.8\textwidth]{figures/GAT_step_2.png}
-                \caption{Multi-head attention mechanism. Each colored line indicates a different way in which the node receives information from its immediate neighbors, which is aggregated to produce an updated representation.}
-                \label{fig:GAT_step_2}
-            \end{figure}
-        \end{column}
-    \end{columns}
-    \footnotesize{Images from \cite{PetarIntroGNN}}
-\end{frame}
+%         \begin{column}{.5\textwidth}
+%             \begin{figure}
+%                 \centering
+%                 \includegraphics[width=0.8\textwidth]{figures/GAT_step_2.png}
+%                 \caption{Multi-head attention mechanism. Each colored line indicates a different way in which the node receives information from its immediate neighbors, which is aggregated to produce an updated representation.}
+%                 \label{fig:GAT_step_2}
+%             \end{figure}
+%         \end{column}
+%     \end{columns}
+%     \footnotesize{Images from \cite{PetarIntroGNN}}
+% \end{frame}
 
 
 \begin{frame}{Over-smoothing}
@@ -645,7 +666,7 @@
     \end{equation}
     where $f_n$ is some normalizing function e.g., the identity function, so
     \begin{equation}
-        \mathbf z_G = \frac{\sum_{v \in V} \mathbf z_u)}{|V|}.
+        \mathbf z_G = \frac{\sum_{v \in V} \mathbf z_u}{|V|}.
     \end{equation}
     \textbf{Limitation}: it does not exploit the structure of the graph! We want to exploit the graph topology at the pooling stage $\longrightarrow$ use \alert{graph clustering or coarsening}
     
@@ -696,7 +717,7 @@
         \label{eq:upedge} \\
         \mathbf m_{\mathcal N(u)}^{(k)} &= \textsc{aggregate}_{e \to v} \left( \left\{ \mathbf h_{(u,v)}^{(k)}, \; \forall v \in \mathcal N(u) \right\} \right) \qquad &\forall u \in V \qquad
         \label{eq:message} \\
-        \mathbf h^{(k)}_u &= \textsc{update}_\text{node} \left( \mathbf h_u^{(k-1)}, \mathbf m_{\mathcal N(u)}, \mathbf h_G^{(k-1)} \right) \qquad &\forall u \in V \qquad
+        \mathbf h^{(k)}_u &= \textsc{update}_\text{node} \left( \mathbf h_u^{(k-1)}, \mathbf m_{\mathcal N(u)}^{(k)}, \mathbf h_G^{(k-1)} \right) \qquad &\forall u \in V \qquad
         \label{eq:upnode} \\
         \mathbf m_{e}^{(k)} &= \textsc{aggregate}_{e \to G} \left( \left\{ \mathbf h_{(u,v)}^{(k)}, \forall (u, v) \in E \right\} \right)
         \label{eq:aggeG} \\
@@ -716,6 +737,8 @@
     \item[\alert{$\bullet$}] a hidden embeddings $\mathbf h_{(u,v)}^{(k)}$ for \alert{each edge} $(u, v) \in E$ in the graph,
     \item[\alert{$\bullet$}] an embedding $\mathbf h_G^{(k)}$ corresponding to the \alert{entire graph} $G$.
     \end{itemize}
+    
+    Remember that at $k=0$ we use the node features to initialize the hidden embeddings $\mathbf h^{(0)}_u$ for all the nodes $u \in |V|$.
     
     This allows the message passing model to \textbf{easily integrate edge and graph-level features}, and recent work has also shown this generalized message passing approach to have benefits compared to a standard GNN in terms of \textbf{logical expressiveness}. Generating embeddings for edges and the entire graph during message passing also makes it \textbf{trivial to define loss functions} based on graph or edge-level classification tasks.
     
@@ -773,7 +796,7 @@
         \item[\alert{$\bullet$}] However, the \alert{data-efficiency} question is still largely open.
     \end{itemize}
     
-    GNNs align with dynamic programming, which is a language in which most algorithms can be expressed. Hence, it is viable that most polynomial-time combinatorial reasoners of interest will be modelable using a GNN.
+    %GNNs align with dynamic programming, which is a language in which most algorithms can be expressed. Hence, it is viable that most polynomial-time combinatorial reasoners of interest will be modelable using a GNN.
     
 \end{frame}
     
