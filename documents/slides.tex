@@ -148,7 +148,7 @@
             Graphs are an important building block since they can naturally encode an \alert{entity-relationship structure}, as well as an \alert{invariance to permutations} (of both nodes and edges) and awareness of \alert{input sparsity}.
             \bigskip
             
-            The following discussion is taken from the book \cite{HamiltonGRLBook}.
+            The following discussion is taken from Hamilton's book \cite{HamiltonGRLBook}.
         \end{column}
         \begin{column}{.5\textwidth-.25cm}
             \begin{figure}
@@ -170,11 +170,11 @@
     
     Given a node $u$ in the graph, $\mathcal N(u)$ is $u$'s graph neighborhood.
     
-    A convenient way to represent graphs is through an \alert{adjacency matrix} $\mathbf A \in \mathbb R^{|V| \times |V|}$, with $\mathbf A[u, v] = 1$ if $(u, v) \in E$ and $\mathbf A[u, v] = 0$ otherwise. If the graph is undirected the matrix in \emph{symmetric}. If the graph has weighted edges we have that $\mathbf A[u,v] \in \mathbb R$.
+    A convenient way to represent graphs is through an \alert{adjacency matrix} $\mathbf A \in \mathbb R^{|V| \times |V|}$, with $\mathbf A[u, v] = 1$ if $(u, v) \in E$ and $\mathbf A[u, v] = 0$ otherwise. If the graph is undirected the matrix is \emph{symmetric}. If the graph has weighted edges we have that $\mathbf A[u,v] \in \mathbb R$.
     
     We also have \alert{node-level attributes / features} represented using a matrix $\mathbf X \in \mathbb R^{d \times |V|}$ (with the ordering of the nodes consistent with the ordering in the adjacency matrix).
     
-    In some cases we also have \alert{graph features}, which are real-valued \emph{features associated with entire graphs}.
+    In some cases we also have \alert{graph features}, which are real-valued \emph{features associated with the entire graph}.
     
 \end{frame}
 
@@ -298,7 +298,7 @@
     
     \alert{Graph-level features} $\longrightarrow$ e.g. bag of nodes or iterative neighborhood aggregation
 
-    \alert{Neighborhood overlap measures} between pairs of nodes $\longrightarrow$ quantify the extent to which a pair of nodes are related.
+    \alert{Neighborhood overlap measures} between pairs of nodes $\longrightarrow$ quantify the \emph{relationships} between nodes, so they quantify the extent to which a pair of nodes are related.
     
     \begin{block}{}%
     E.g., simply count the number of neighbors that two nodes share:
